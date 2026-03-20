@@ -3,6 +3,8 @@ package user
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/rotisserie/eris"
 )
 
 // DomainEvent is the interface all auth domain events implement.
@@ -24,11 +26,13 @@ func (e UserRegistered) AggregateID() string   { return e.aggregateID }
 func (e UserRegistered) OccurredAt() time.Time { return e.occurredAt }
 
 func (e UserRegistered) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		AggregateID string    `json:"aggregate_id"`
-		OccurredAt  time.Time `json:"occurred_at"`
+	data, err := json.Marshal(struct {
+		AggregateID string    `json:"aggregateId"`
+		OccurredAt  time.Time `json:"occurredAt"`
 		Login       string    `json:"login"`
 	}{e.aggregateID, e.occurredAt, e.Login})
+
+	return data, eris.Wrap(err, "marshaling UserRegistered event")
 }
 
 // UserDeleted is emitted when a user is deleted.
@@ -42,10 +46,12 @@ func (e UserDeleted) AggregateID() string   { return e.aggregateID }
 func (e UserDeleted) OccurredAt() time.Time { return e.occurredAt }
 
 func (e UserDeleted) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		AggregateID string    `json:"aggregate_id"`
-		OccurredAt  time.Time `json:"occurred_at"`
+	data, err := json.Marshal(struct {
+		AggregateID string    `json:"aggregateId"`
+		OccurredAt  time.Time `json:"occurredAt"`
 	}{e.aggregateID, e.occurredAt})
+
+	return data, eris.Wrap(err, "marshaling UserDeleted event")
 }
 
 // PasswordChanged is emitted when a user changes their password.
@@ -59,10 +65,12 @@ func (e PasswordChanged) AggregateID() string   { return e.aggregateID }
 func (e PasswordChanged) OccurredAt() time.Time { return e.occurredAt }
 
 func (e PasswordChanged) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		AggregateID string    `json:"aggregate_id"`
-		OccurredAt  time.Time `json:"occurred_at"`
+	data, err := json.Marshal(struct {
+		AggregateID string    `json:"aggregateId"`
+		OccurredAt  time.Time `json:"occurredAt"`
 	}{e.aggregateID, e.occurredAt})
+
+	return data, eris.Wrap(err, "marshaling PasswordChanged event")
 }
 
 // UserLoggedIn is emitted when a user successfully logs in.
@@ -76,8 +84,10 @@ func (e UserLoggedIn) AggregateID() string   { return e.aggregateID }
 func (e UserLoggedIn) OccurredAt() time.Time { return e.occurredAt }
 
 func (e UserLoggedIn) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		AggregateID string    `json:"aggregate_id"`
-		OccurredAt  time.Time `json:"occurred_at"`
+	data, err := json.Marshal(struct {
+		AggregateID string    `json:"aggregateId"`
+		OccurredAt  time.Time `json:"occurredAt"`
 	}{e.aggregateID, e.occurredAt})
+
+	return data, eris.Wrap(err, "marshaling UserLoggedIn event")
 }

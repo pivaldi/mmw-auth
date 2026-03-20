@@ -28,6 +28,7 @@ func (r *SessionRepository) Save(ctx context.Context, s *authdomain.Session) err
 		`INSERT INTO auth.sessions (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)`,
 		s.ID(), s.UserID(), s.Token(), s.ExpiresAt(),
 	)
+
 	return eris.Wrap(err, "save session")
 }
 
@@ -49,7 +50,9 @@ func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*aut
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("session not found or expired")
 		}
+
 		return nil, eris.Wrap(err, "scan session row")
 	}
+
 	return authdomain.ReconstructSession(id, userID, tok, expiresAt), nil
 }

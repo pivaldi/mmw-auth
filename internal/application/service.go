@@ -8,9 +8,11 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"github.com/pivaldi/mmw/auth/internal/application/ports"
 	authdomain "github.com/pivaldi/mmw/auth/internal/domain/auth"
 	"github.com/pivaldi/mmw/auth/internal/domain/auth/user"
-	"github.com/pivaldi/mmw/auth/internal/application/ports"
+	defauth "github.com/pivaldi/mmw/contracts/definitions/auth"
+	"github.com/rotisserie/eris"
 )
 
 // Sentinel errors for use-case failures.
@@ -19,6 +21,8 @@ var (
 	ErrInvalidToken       = errors.New("invalid or expired token")
 	ErrUserNotFound       = errors.New("user not found")
 )
+
+const tokenDuration = 24 * time.Hour
 
 // AuthApplicationService orchestrates all auth use cases.
 type AuthApplicationService struct {
@@ -50,7 +54,7 @@ func NewAuthService(
 func (s *AuthApplicationService) Register(ctx context.Context, login, password string) (uuid.UUID, error) {
 	l, err := user.NewLogin(login)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, eris.Wrap(err, "creating login")
 	}
 
 	id := uuid.New()
@@ -59,18 +63,24 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 	err = s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := user.Create(id, l, password)
 		if err != nil {
-			return err
+			return eris.Wrap(err, "creating user")
 		}
 		if err := s.userRepo.Save(ctx, u); err != nil {
-			return err
+			return eris.Wrap(err, "saving user")
 		}
 		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {
-			return err
+			return eris.Wrap(err, "dispatching events")
 		}
 		userID = u.ID()
+
 		return nil
 	})
-	return userID, err
+
+	if err != nil {
+		return uuid.Nil, eris.Wrap(err, "register transaction failed")
+	}
+
+	return userID, nil
 }
 
 // Login authenticates a user and returns a JWT token and the user ID.
@@ -99,31 +109,37 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 
 		u.MarkLoggedIn()
 		if err := s.userRepo.Update(ctx, u); err != nil {
-			return err
+			return eris.Wrap(err, "updating user")
 		}
 		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {
-			return err
+			return eris.Wrap(err, "dispatching events")
 		}
 
-		sess := authdomain.NewSession(u.ID(), t, 24*time.Hour)
+		sess := authdomain.NewSession(u.ID(), t, tokenDuration)
 		if err := s.sessionRepo.Save(ctx, sess); err != nil {
-			return err
+			return eris.Wrap(err, "saving session")
 		}
 
 		token = t
 		userID = u.ID()
+
 		return nil
 	})
 
-	return token, userID, err
+	if err != nil {
+		return "", uuid.Nil, eris.Wrap(err, "login transaction failed")
+	}
+
+	return token, userID, nil
 }
 
 // ValidateToken verifies JWT signature and confirms the session exists in the DB.
 func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
-	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken
 		}
+
 		return s.jwtSecret, nil
 	})
 	if err != nil || !parsed.Valid {
@@ -157,9 +173,29 @@ func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString 
 	return userID, nil
 }
 
+// GetUser retrieves a user by UUID for cross-service in-process access.
+func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	return &defauth.UserDTO{UUID: u.ID(), Login: u.Login().String()}, nil
+}
+
 // ChangePassword replaces the user's password after verifying the old one.
-func (s *AuthApplicationService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
-	return s.uow.WithTransaction(ctx, func(ctx context.Context) error {
+func (s *AuthApplicationService) ChangePassword(
+	ctx context.Context,
+	userID uuid.UUID,
+	oldPassword string,
+	newPassword string,
+) error {
+	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
 			return ErrUserNotFound
@@ -168,32 +204,60 @@ func (s *AuthApplicationService) ChangePassword(ctx context.Context, userID uuid
 			return fmt.Errorf("%w: %w", ErrInvalidCredentials, err)
 		}
 		if err := s.userRepo.Update(ctx, u); err != nil {
-			return err
+			return eris.Wrap(err, "updating user password")
 		}
-		return s.dispatcher.Dispatch(ctx, u.ClearEvents())
+
+		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {
+			return eris.Wrap(err, "dispatching events")
+		}
+
+		return nil
 	})
+
+	if err != nil {
+		return eris.Wrap(err, "change password transaction failed")
+	}
+
+	return nil
 }
 
 // DeleteUser removes a user from the system.
 func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUID) error {
-	return s.uow.WithTransaction(ctx, func(ctx context.Context) error {
+	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
 			return ErrUserNotFound
 		}
 		u.Delete()
 		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {
-			return err
+			return eris.Wrap(err, "dispatching events")
 		}
-		return s.userRepo.Delete(ctx, userID)
+
+		if err := s.userRepo.Delete(ctx, userID); err != nil {
+			return eris.Wrap(err, "deleting user")
+		}
+
+		return nil
 	})
+
+	if err != nil {
+		return eris.Wrap(err, "delete user transaction failed")
+	}
+
+	return nil
 }
 
 func (s *AuthApplicationService) createJWT(userID uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"authorized": true,
 		"user_id":    userID.String(),
-		"exp":        time.Now().Add(24 * time.Hour).Unix(),
+		"exp":        time.Now().Add(tokenDuration).Unix(),
 	}
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.jwtSecret)
+
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.jwtSecret)
+	if err != nil {
+		return "", eris.Wrap(err, "signing JWT")
+	}
+
+	return token, nil
 }

@@ -29,6 +29,7 @@ func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
 		 VALUES ($1, $2, $3, $4, $5)`,
 		u.ID(), u.Login().String(), u.PasswordHash().String(), u.CreatedAt(), u.UpdatedAt(),
 	)
+
 	return eris.Wrap(err, "save user")
 }
 
@@ -38,6 +39,7 @@ func (r *UserRepository) FindByLogin(ctx context.Context, login user.Login) (*us
 		`SELECT id, login, password_hash, created_at, updated_at FROM auth.users WHERE login = $1`,
 		login.String(),
 	)
+
 	return scanUser(row)
 }
 
@@ -47,6 +49,7 @@ func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*user.User
 		`SELECT id, login, password_hash, created_at, updated_at FROM auth.users WHERE id = $1`,
 		id,
 	)
+
 	return scanUser(row)
 }
 
@@ -56,12 +59,14 @@ func (r *UserRepository) Update(ctx context.Context, u *user.User) error {
 		`UPDATE auth.users SET login = $1, password_hash = $2, updated_at = $3 WHERE id = $4`,
 		u.Login().String(), u.PasswordHash().String(), u.UpdatedAt(), u.ID(),
 	)
+
 	return eris.Wrap(err, "update user")
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	exec := oglpguow.GetExecutor(ctx, r.pool)
 	_, err := exec.Exec(ctx, `DELETE FROM auth.users WHERE id = $1`, id)
+
 	return eris.Wrap(err, "delete user")
 }
 
@@ -79,12 +84,15 @@ func scanUser(row pgx.Row) (*user.User, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("user not found")
 		}
+
 		return nil, eris.Wrap(err, "scan user row")
 	}
+
 	login, err := user.NewLogin(loginStr)
 	if err != nil {
 		return nil, eris.Wrap(err, "reconstruct login")
 	}
 	ph := user.NewHashedPassword(hashStr)
+
 	return user.ReconstructUser(id, login, ph, createdAt, updatedAt), nil
 }

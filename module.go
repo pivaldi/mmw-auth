@@ -3,19 +3,22 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	ogloutbox "github.com/ovya/ogl/db/outbox"
+	ogluow "github.com/ovya/ogl/pg/uow"
 	oglevents "github.com/ovya/ogl/platform/events"
 	oglserver "github.com/ovya/ogl/platform/server"
-	ogluow "github.com/ovya/ogl/pg/uow"
 	"github.com/pivaldi/mmw/auth/internal/adapters/inbound/connect"
 	outboxevents "github.com/pivaldi/mmw/auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw/auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw/auth/internal/application"
 	"github.com/pivaldi/mmw/auth/internal/infra/config"
+	defauth "github.com/pivaldi/mmw/contracts/definitions/auth"
 	"github.com/pivaldi/mmw/contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
 	"golang.org/x/net/http2"
@@ -27,10 +30,11 @@ const relayTableName = "auth.event"
 
 // Module implements oglcore.Module for the auth service.
 type Module struct {
-	appName string
-	relay   *ogloutbox.EventsRelay
-	server  *oglserver.HTTPServer
-	logger  *slog.Logger
+	appName     string
+	relay       *ogloutbox.EventsRelay
+	server      *oglserver.HTTPServer
+	logger      *slog.Logger
+	authService *application.AuthApplicationService
 }
 
 var conf *config.Config
@@ -45,6 +49,7 @@ func GetConfig(ctx context.Context, envprefix string, envs map[string]string) (*
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to load auth configuration")
 	}
+
 	return conf, nil
 }
 
@@ -66,10 +71,11 @@ func New(cfg *config.Config, dbPool *pgxpool.Pool, eventBus oglevents.SystemEven
 	server := oglserver.NewHTTPServer(cfg.AppName, cfg.Environment.String(), cfg.Server, h2cHandler, logger)
 
 	return &Module{
-		appName: cfg.AppName,
-		relay:   ogloutbox.NewEnventsRelay(dbPool, eventBus, logger, relayTableName),
-		server:  server,
-		logger:  logger,
+		appName:     cfg.AppName,
+		relay:       ogloutbox.NewEnventsRelay(dbPool, eventBus, logger, relayTableName),
+		server:      server,
+		logger:      logger,
+		authService: authService,
 	}
 }
 
@@ -93,4 +99,28 @@ func (m *Module) Start(ctx context.Context) error {
 // GetName returns the module name.
 func (m *Module) GetName() string {
 	return "auth"
+}
+
+// Ensure Module implements defauth.AuthService so it can be passed directly to
+// defauth.NewInprocClient without an intermediate wrapper.
+var _ defauth.AuthService = (*Module)(nil)
+
+// GetUser delegates to the internal auth application service.
+func (m *Module) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
+	u, err := m.authService.GetUser(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting user: %w", err)
+	}
+
+	return u, nil
+}
+
+// ValidateToken delegates to the internal auth application service.
+func (m *Module) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
+	id, err := m.authService.ValidateToken(ctx, token)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("validating token: %w", err)
+	}
+
+	return id, nil
 }

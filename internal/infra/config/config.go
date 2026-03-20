@@ -90,5 +90,9 @@ func Load(ctx context.Context, envprefix string, envs map[string]string) (*Confi
 		return nil, eris.New("database password is empty")
 	}
 
+	if config.JWT.Secret == "" {
+		return nil, eris.New("jwt secret is empty")
+	}
+
 	return config, nil
 }
