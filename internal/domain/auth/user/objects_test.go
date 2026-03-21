@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pivaldi/mmw/auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 )
 
 func TestNewLogin_valid(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/pivaldi/mmw/auth
+module github.com/pivaldi/mmw-auth
 
 go 1.26.1
 
@@ -8,6 +8,9 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/ovya/ogl v0.0.0-20260321143034-879a52497e75
+	github.com/pivaldi/mmw-contracts v0.0.0-20260312102205-fec929f76b93
+	github.com/pivaldi/mmw-contracts/definitions/auth v0.0.0-20260312102205-fec929f76b93
+	github.com/pressly/goose/v3 v3.0.0-00010101000000-000000000000
 	golang.org/x/crypto v0.48.0
 	golang.org/x/net v0.50.0
 )
@@ -50,3 +53,5 @@ require (
 )
 
 tool gotest.tools/gotestsum
+
+replace github.com/pressly/goose/v3 => github.com/pivaldi/goose/v3 v3.27.1

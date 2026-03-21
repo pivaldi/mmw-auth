@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	authdomain "github.com/pivaldi/mmw/auth/internal/domain/auth"
-	"github.com/pivaldi/mmw/auth/internal/domain/auth/user"
-	"github.com/pivaldi/mmw/auth/internal/application"
-	"github.com/pivaldi/mmw/auth/internal/application/ports"
+	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
+	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/application"
+	"github.com/pivaldi/mmw-auth/internal/application/ports"
 )
 
 // --- Mock repos ---

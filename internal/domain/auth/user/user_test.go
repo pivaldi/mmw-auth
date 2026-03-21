@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pivaldi/mmw/auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 )
 
 func mustLogin(t *testing.T, s string) user.Login {

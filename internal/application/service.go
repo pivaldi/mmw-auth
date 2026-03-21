@@ -8,10 +8,10 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
-	"github.com/pivaldi/mmw/auth/internal/application/ports"
-	authdomain "github.com/pivaldi/mmw/auth/internal/domain/auth"
-	"github.com/pivaldi/mmw/auth/internal/domain/auth/user"
-	defauth "github.com/pivaldi/mmw/contracts/definitions/auth"
+	"github.com/pivaldi/mmw-auth/internal/application/ports"
+	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
+	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
 )
 

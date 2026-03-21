@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	authdomain "github.com/pivaldi/mmw/auth/internal/domain/auth"
-	"github.com/pivaldi/mmw/auth/internal/domain/auth/user"
+	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
+	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 )
 
 // UserRepository defines persistence operations for the User aggregate.
