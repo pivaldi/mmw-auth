@@ -25,7 +25,7 @@ func (h *AuthHandler) Register(
 	ctx context.Context,
 	req *connect.Request[authv1.RegisterRequest],
 ) (*connect.Response[authv1.RegisterResponse], error) {
-	userID, err := h.svc.Register(ctx, req.Msg.Login, req.Msg.Password)
+	userID, err := h.svc.Register(ctx, req.Msg.GetLogin(), req.Msg.GetPassword())
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
@@ -37,7 +37,7 @@ func (h *AuthHandler) Login(
 	ctx context.Context,
 	req *connect.Request[authv1.LoginRequest],
 ) (*connect.Response[authv1.LoginResponse], error) {
-	token, userID, err := h.svc.Login(ctx, req.Msg.Login, req.Msg.Password)
+	token, userID, err := h.svc.Login(ctx, req.Msg.GetLogin(), req.Msg.GetPassword())
 	if err != nil {
 		if errors.Is(err, application.ErrInvalidCredentials) {
 			return nil, connect.NewError(connect.CodeUnauthenticated, err)
@@ -56,7 +56,7 @@ func (h *AuthHandler) ValidateToken(
 	ctx context.Context,
 	req *connect.Request[authv1.ValidateTokenRequest],
 ) (*connect.Response[authv1.ValidateTokenResponse], error) {
-	userID, err := h.svc.ValidateToken(ctx, req.Msg.Token)
+	userID, err := h.svc.ValidateToken(ctx, req.Msg.GetToken())
 	if err != nil {
 		return connect.NewResponse(&authv1.ValidateTokenResponse{IsValid: false}), nil
 	}
@@ -71,12 +71,12 @@ func (h *AuthHandler) ChangePassword(
 	ctx context.Context,
 	req *connect.Request[authv1.ChangePasswordRequest],
 ) (*connect.Response[authv1.ChangePasswordResponse], error) {
-	userID, err := uuid.Parse(req.Msg.UserId)
+	userID, err := uuid.Parse(req.Msg.GetUserId())
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid user_id"))
 	}
 
-	if err := h.svc.ChangePassword(ctx, userID, req.Msg.OldPassword, req.Msg.NewPassword); err != nil {
+	if err := h.svc.ChangePassword(ctx, userID, req.Msg.GetOldPassword(), req.Msg.GetNewPassword()); err != nil {
 		if errors.Is(err, application.ErrUserNotFound) {
 			return nil, connect.NewError(connect.CodeNotFound, err)
 		}
@@ -94,7 +94,7 @@ func (h *AuthHandler) DeleteUser(
 	ctx context.Context,
 	req *connect.Request[authv1.DeleteUserRequest],
 ) (*connect.Response[authv1.DeleteUserResponse], error) {
-	userID, err := uuid.Parse(req.Msg.UserId)
+	userID, err := uuid.Parse(req.Msg.GetUserId())
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid user_id"))
 	}

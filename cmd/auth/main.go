@@ -15,7 +15,7 @@ import (
 	oglevents "github.com/ovya/ogl/platform/events"
 	oglrunner "github.com/ovya/ogl/platform/runner"
 	oglslog "github.com/ovya/ogl/slog"
-	"github.com/pivaldi/mmw-auth"
+	auth "github.com/pivaldi/mmw-auth"
 	authConfig "github.com/pivaldi/mmw-auth/config"
 	"github.com/rotisserie/eris"
 )
