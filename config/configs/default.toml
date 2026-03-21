@@ -10,6 +10,6 @@ sslmode = "disable"
 
 [server]
 port = 8091
-scheme = "https"
+scheme = "http"
 host = "localhost"
 allowed-origins = ["*"] # IMPORTANT; Change this in production !
