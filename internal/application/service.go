@@ -261,3 +261,13 @@ func (s *AuthApplicationService) createJWT(userID uuid.UUID) (string, error) {
 
 	return token, nil
 }
+
+// Health return a simple database health check
+func (s *AuthApplicationService) Health(ctx context.Context) (any, error) {
+	count, err := s.userRepo.Health(ctx)
+	if err != nil {
+		return 0, eris.Wrap(err, "database health error")
+	}
+
+	return count, nil
+}

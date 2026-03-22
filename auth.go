@@ -74,7 +74,16 @@ func New(infra Infrastructure) (*App, error) {
 	mux.Handle(path, handler)
 
 	h2cHandler := h2c.NewHandler(mux, &http2.Server{})
-	server := oglserver.NewHTTPServer(cfg.Environment.String(), cfg.Server, h2cHandler, infra.Logger)
+	httpInfra := oglserver.HTTPServerInfra{
+		Config:      cfg.Server,
+		Handler:     h2cHandler,
+		Logger:      infra.Logger,
+		HealthFns:   oglserver.HealthFns{"database-message": userRepo.Health},
+		LogPayloads: true,
+	}
+
+	withDebug := cfg.Environment == config.EnvironmentDevelopment
+	server := oglserver.NewHTTPServer2(withDebug, httpInfra)
 
 	return &App{
 		relay:       ogloutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),

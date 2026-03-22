@@ -70,6 +70,17 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return eris.Wrap(err, "delete user")
 }
 
+func (r *UserRepository) Health(ctx context.Context) (any, error) {
+	exec := oglpguow.GetExecutor(ctx, r.pool)
+	row := exec.QueryRow(ctx, "SELECT count(*) FROM auth.users")
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, eris.Wrap(err, "scan row")
+	}
+
+	return count, nil
+}
+
 // scanUser reconstructs a User aggregate from a pgx row.
 // Uses ReconstructUser — never calls Create — so the stored password hash is preserved.
 func scanUser(row pgx.Row) (*user.User, error) {
@@ -82,7 +93,7 @@ func scanUser(row pgx.Row) (*user.User, error) {
 	)
 	if err := row.Scan(&id, &loginStr, &hashStr, &createdAt, &updatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("user not found")
+			return nil, eris.New("user not found")
 		}
 
 		return nil, eris.Wrap(err, "scan user row")
