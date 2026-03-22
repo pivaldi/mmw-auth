@@ -49,7 +49,7 @@ func main() {
 		return
 	}
 
-	logger, err = oglslog.New(authConf.Environment.String(), authConf.LogLevel.SlogLevel())
+	logger, err = oglslog.New(oglslog.HandlerText, authConf.LogLevel.SlogLevel())
 	if err != nil {
 		exitCode = 1
 		fmt.Fprint(os.Stdout, eris.ToString(err, true)+"\n")
