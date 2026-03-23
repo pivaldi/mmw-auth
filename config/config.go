@@ -4,12 +4,12 @@ package config
 import (
 	"context"
 	"embed"
-	"fmt"
 	"io/fs"
 	"log/slog"
 
 	oglconfig "github.com/ovya/ogl/config"
 	oglpfconfig "github.com/ovya/ogl/platform/config"
+	oglslog "github.com/ovya/ogl/slog"
 	"github.com/rotisserie/eris"
 )
 
@@ -60,16 +60,12 @@ type JWT struct {
 }
 
 type Config struct {
-	Database    *oglpfconfig.Database `mapstructure:"database"`
-	Environment Environment           `env:"APP_ENV, required" mapstructure:"environment"`
-	AppName     string                `env:"APP_NAME"`
-	Server      *oglpfconfig.Server   `mapstructure:"server"`
-	LogLevel    LogLevel              `mapstructure:"log-level"`
-	JWT         JWT                   `json:"-"`
-}
-
-func (c *Config) GetAppEnv() fmt.Stringer {
-	return c.Environment
+	oglpfconfig.Base
+	Database *oglpfconfig.Database `mapstructure:"database"`
+	AppName  string                `env:"APP_NAME"`
+	Server   *oglpfconfig.Server   `mapstructure:"server"`
+	LogLevel oglslog.LogLevel      `mapstructure:"log-level"`
+	JWT      JWT                   `json:"-"`
 }
 
 var conf *Config
@@ -93,7 +89,7 @@ func Load(ctx context.Context, envprefix string) (*Config, error) {
 	}
 
 	if conf.Database.Password == "" {
-		return nil, eris.New("database password is empty")
+		return nil, eris.New(envprefix + "DB_PASSWORD environment variable is required")
 	}
 
 	if conf.JWT.Secret == "" {

@@ -10,7 +10,6 @@ require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/ovya/ogl v0.0.0-20260321143034-879a52497e75
 	github.com/pivaldi/mmw-contracts v0.0.0-20260321163605-264690edbe4e
-	github.com/pivaldi/mmw-contracts/definitions/auth v0.0.0-20260321163605-264690edbe4e
 	github.com/rotisserie/eris v0.5.4
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.48.0

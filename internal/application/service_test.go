@@ -50,6 +50,7 @@ func (m *mockUserRepo) FindByID(_ context.Context, id uuid.UUID) (*user.User, er
 }
 func (m *mockUserRepo) Update(_ context.Context, u *user.User) error { m.updated = u; return nil }
 func (m *mockUserRepo) Delete(_ context.Context, id uuid.UUID) error { m.deletedID = id; return nil }
+func (m *mockUserRepo) Health(_ context.Context) (any, error)        { return nil, nil }
 
 type mockSessionRepo struct {
 	saved   *authdomain.Session

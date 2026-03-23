@@ -175,3 +175,12 @@ run = "go run cmd/migration/*.go reset"
 [tasks."db:migrate:status"]
 description = "Show current migration statud"
 run = "go run cmd/migration/*.go status"
+
+
+[tasks."arch:graph"]
+description = "Show graph architectural dependcies for this service"
+run = """
+goda graph \
+  "shared(github.com/pivaldi/mmw-auth:all, github.com/pivaldi/mmw-auth/... + github.com/pivaldi/mmw-auth/.. + github.com/pivaldi/mmw-notifications/... + github.com/pivaldi/mmw-contracts/...) - github.com/pivaldi/mmw-auth/cmd/migration  - github.com/pivaldi/mmw-auth/internal/infra/persistence/migrations/..." \
+  | dot -Tsvg -o graph.svg  &&  echo 'Generated graph: {{config_root}}/graph.svg'
+ """

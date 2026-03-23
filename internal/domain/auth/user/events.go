@@ -7,6 +7,21 @@ import (
 	"github.com/rotisserie/eris"
 )
 
+const (
+	EventUserRegistered = "auth.user.registered"
+	EventUserDeleted    = "auth.user.deleted"
+	//nolint:gosec // Event type constant, not a credential
+	EventPasswordChanged = "auth.user.password_changed"
+	EventUserLoggedIn    = "auth.user.logged_in"
+)
+
+var AllEvents = []string{
+	EventUserRegistered,
+	EventUserDeleted,
+	EventPasswordChanged,
+	EventUserLoggedIn,
+}
+
 // DomainEvent is the interface all auth domain events implement.
 type DomainEvent interface {
 	EventType() string
@@ -21,7 +36,7 @@ type UserRegistered struct {
 	Login       string
 }
 
-func (e UserRegistered) EventType() string     { return "auth.user.registered" }
+func (e UserRegistered) EventType() string     { return EventUserRegistered }
 func (e UserRegistered) AggregateID() string   { return e.aggregateID }
 func (e UserRegistered) OccurredAt() time.Time { return e.occurredAt }
 
@@ -41,7 +56,7 @@ type UserDeleted struct {
 	occurredAt  time.Time
 }
 
-func (e UserDeleted) EventType() string     { return "auth.user.deleted" }
+func (e UserDeleted) EventType() string     { return EventUserDeleted }
 func (e UserDeleted) AggregateID() string   { return e.aggregateID }
 func (e UserDeleted) OccurredAt() time.Time { return e.occurredAt }
 
@@ -60,7 +75,7 @@ type PasswordChanged struct {
 	occurredAt  time.Time
 }
 
-func (e PasswordChanged) EventType() string     { return "auth.user.password_changed" }
+func (e PasswordChanged) EventType() string     { return EventPasswordChanged }
 func (e PasswordChanged) AggregateID() string   { return e.aggregateID }
 func (e PasswordChanged) OccurredAt() time.Time { return e.occurredAt }
 
@@ -79,7 +94,7 @@ type UserLoggedIn struct {
 	occurredAt  time.Time
 }
 
-func (e UserLoggedIn) EventType() string     { return "auth.user.logged_in" }
+func (e UserLoggedIn) EventType() string     { return EventUserLoggedIn }
 func (e UserLoggedIn) AggregateID() string   { return e.aggregateID }
 func (e UserLoggedIn) OccurredAt() time.Time { return e.occurredAt }
 

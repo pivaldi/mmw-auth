@@ -8,6 +8,8 @@ import (
 	"testing"
 	"testing/fstest"
 
+	oglconfig "github.com/ovya/ogl/config"
+	oglpfconfig "github.com/ovya/ogl/platform/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,49 +17,49 @@ import (
 func TestDatabase_URL(t *testing.T) {
 	tests := []struct {
 		name     string
-		db       *Database
+		db       *oglpfconfig.Database
 		expected string
 	}{
 		{
 			name: "with user and password",
-			db: &Database{
+			db: &oglpfconfig.Database{
 				User:     "testuser",
-				password: "testpass",
+				Password: "testpass",
 				Host:     "localhost",
-				Port:     "5432",
+				Port:     5432,
 				Name:     "testdb",
 			},
 			expected: "postgres://testuser:testpass@localhost:5432/testdb",
 		},
 		{
 			name: "with user only",
-			db: &Database{
+			db: &oglpfconfig.Database{
 				User:     "testuser",
-				password: "",
+				Password: "",
 				Host:     "localhost",
-				Port:     "5432",
+				Port:     5432,
 				Name:     "testdb",
 			},
 			expected: "postgres://testuser@localhost:5432/testdb",
 		},
 		{
 			name: "without credentials",
-			db: &Database{
+			db: &oglpfconfig.Database{
 				User:     "",
-				password: "",
+				Password: "",
 				Host:     "localhost",
-				Port:     "5432",
+				Port:     5432,
 				Name:     "testdb",
 			},
 			expected: "postgres://localhost:5432/testdb",
 		},
 		{
 			name: "with special characters in password",
-			db: &Database{
+			db: &oglpfconfig.Database{
 				User:     "user",
-				password: "p@ss:word",
+				Password: "p@ss:word",
 				Host:     "db.example.com",
-				Port:     "5432",
+				Port:     5432,
 				Name:     "mydb",
 			},
 			expected: "postgres://user:p%40ss%3Aword@db.example.com:5432/mydb",
@@ -82,17 +84,19 @@ func TestLoad_Success(t *testing.T) {
 		return fstest.MapFS{
 			"configs/default.toml": &fstest.MapFile{
 				Data: []byte(`app-name = "TestApp"
-port = "8080"
+[server]
+port = 8080
 
 [database]
 user = "rcv"
 host = "localhost"
-port = "5432"
+port = 5432
 name = "testdb"
 `),
 			},
 			"configs/testing.toml": &fstest.MapFile{
-				Data: []byte(`port = "9090"
+				Data: []byte(`[server]
+port = 9090
 
 [database]
 host = "test-host"
@@ -105,24 +109,25 @@ host = "test-host"
 	envs := map[string]string{
 		"DB_PASSWORD": "secret123",
 		"APP_ENV":     "testing",
-		"APP_NAME":    "TestApp",
+	}
+	for key, value := range envs {
+		t.Setenv(key, value)
 	}
 
-	config, err := Load(ctx, envs)
+	config, err := Load(ctx, "")
 
 	require.NoError(t, err)
 	require.NotNil(t, config)
 	require.NotNil(t, config.Database)
 
 	// Verify config was loaded and merged
-	assert.Equal(t, "TestApp", config.AppName)
-	assert.Equal(t, "9090", config.Port) // From testing.toml
-	assert.Equal(t, EnvironmentTesting, config.Environment)
+	assert.Equal(t, oglpfconfig.Port(9090), config.Server.Port) // From testing.toml
+	assert.Equal(t, oglconfig.EnvironmentTesting, config.Environment)
 
 	// Verify database config
 	assert.Equal(t, "rcv", config.Database.User)
 	assert.Equal(t, "test-host", config.Database.Host) // From testing.toml
-	assert.Equal(t, "5432", config.Database.Port)
+	assert.Equal(t, oglpfconfig.Port(5432), config.Database.Port)
 	assert.Equal(t, "testdb", config.Database.Name)
 
 	// Verify URL generation includes password
@@ -151,12 +156,15 @@ name = "testdb"
 	}
 
 	ctx := context.Background()
+	t.Setenv("DB_PASSWORD", "")
 	envs := map[string]string{
 		"APP_ENV": "development",
-		// DB_PASSWORD is missing
+	}
+	for key, value := range envs {
+		t.Setenv(key, value)
 	}
 
-	config, err := Load(ctx, envs)
+	config, err := Load(ctx, "")
 
 	assert.Error(t, err)
 	assert.Nil(t, config)
@@ -173,12 +181,13 @@ func TestLoad_WithDefaultConfigOnly(t *testing.T) {
 		return fstest.MapFS{
 			"configs/default.toml": &fstest.MapFile{
 				Data: []byte(`app-name = "DefaultApp"
-port = "8080"
+[server]
+port = 8080
 
 [database]
 user = "admin"
 host = "localhost"
-port = "5432"
+port = 5432
 name = "defaultdb"
 `),
 			},
@@ -191,21 +200,24 @@ name = "defaultdb"
 		"APP_ENV":     "production", // No production.toml exists
 		"APP_NAME":    "DefaultApp",
 	}
+	for key, value := range envs {
+		t.Setenv(key, value)
+	}
 
-	config, err := Load(ctx, envs)
+	config, err := Load(ctx, "")
 
 	require.NoError(t, err)
 	require.NotNil(t, config)
 
 	// Should use default config values
 	assert.Equal(t, "DefaultApp", config.AppName)
-	assert.Equal(t, "8080", config.Port)
-	assert.Equal(t, EnvironmentProduction, config.Environment)
+	assert.Equal(t, oglpfconfig.Port(8080), config.Server.Port)
+	assert.Equal(t, oglconfig.EnvironmentProduction, config.Environment)
 }
 
 func TestConfig_GetAppEnv(t *testing.T) {
 	config := &Config{
-		Environment: EnvironmentStaging,
+		Base: oglpfconfig.Base{Environment: oglconfig.EnvironmentStaging},
 	}
 
 	env := config.GetAppEnv()
@@ -216,7 +228,7 @@ func TestConfig_GetAppEnv(t *testing.T) {
 func TestPort_String(t *testing.T) {
 	tests := []struct {
 		name     string
-		port     Port
+		port     oglpfconfig.Port
 		expected string
 	}{
 		{
@@ -257,14 +269,14 @@ func TestPort_String(t *testing.T) {
 func TestServer_URL(t *testing.T) {
 	tests := []struct {
 		name     string
-		server   Server
+		server   oglpfconfig.Server
 		path     string
 		queries  map[string]string
 		expected string
 	}{
 		{
 			name: "http with default port 80 - port omitted",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "http",
 				Host:   "example.com",
 				Port:   80,
@@ -275,7 +287,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "https with default port 443 - port omitted",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "https",
 				Host:   "example.com",
 				Port:   443,
@@ -286,7 +298,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "http with custom port 8080",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "http",
 				Host:   "localhost",
 				Port:   8080,
@@ -297,7 +309,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "https with custom port 8443",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "https",
 				Host:   "api.example.com",
 				Port:   8443,
@@ -308,7 +320,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "with single query parameter",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "https",
 				Host:   "example.com",
 				Port:   443,
@@ -321,7 +333,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "with multiple query parameters",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "http",
 				Host:   "localhost",
 				Port:   3000,
@@ -336,7 +348,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "empty path with queries",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "https",
 				Host:   "example.com",
 				Port:   443,
@@ -349,7 +361,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "special characters in query values",
-			server: Server{
+			server: oglpfconfig.Server{
 				Scheme: "https",
 				Host:   "api.example.com",
 				Port:   443,
@@ -373,27 +385,27 @@ func TestServer_URL(t *testing.T) {
 func TestEnvironment_IsDev(t *testing.T) {
 	tests := []struct {
 		name     string
-		env      Environment
+		env      oglconfig.Environment
 		expected bool
 	}{
 		{
 			name:     "development is dev",
-			env:      EnvironmentDevelopment,
+			env:      oglconfig.EnvironmentDevelopment,
 			expected: true,
 		},
 		{
 			name:     "staging is not dev",
-			env:      EnvironmentStaging,
+			env:      oglconfig.EnvironmentStaging,
 			expected: false,
 		},
 		{
 			name:     "production is not dev",
-			env:      EnvironmentProduction,
+			env:      oglconfig.EnvironmentProduction,
 			expected: false,
 		},
 		{
 			name:     "testing is not dev",
-			env:      EnvironmentTesting,
+			env:      oglconfig.EnvironmentTesting,
 			expected: false,
 		},
 	}
@@ -409,27 +421,27 @@ func TestEnvironment_IsDev(t *testing.T) {
 func TestEnvironment_String(t *testing.T) {
 	tests := []struct {
 		name     string
-		env      Environment
+		env      oglconfig.Environment
 		expected string
 	}{
 		{
 			name:     "development",
-			env:      EnvironmentDevelopment,
+			env:      oglconfig.EnvironmentDevelopment,
 			expected: "development",
 		},
 		{
 			name:     "staging",
-			env:      EnvironmentStaging,
+			env:      oglconfig.EnvironmentStaging,
 			expected: "staging",
 		},
 		{
 			name:     "production",
-			env:      EnvironmentProduction,
+			env:      oglconfig.EnvironmentProduction,
 			expected: "production",
 		},
 		{
 			name:     "testing",
-			env:      EnvironmentTesting,
+			env:      oglconfig.EnvironmentTesting,
 			expected: "testing",
 		},
 	}
@@ -445,37 +457,37 @@ func TestEnvironment_String(t *testing.T) {
 func TestEnvironment_IsValid(t *testing.T) {
 	tests := []struct {
 		name     string
-		env      Environment
+		env      oglconfig.Environment
 		expected bool
 	}{
 		{
 			name:     "valid development",
-			env:      EnvironmentDevelopment,
+			env:      oglconfig.EnvironmentDevelopment,
 			expected: true,
 		},
 		{
 			name:     "valid staging",
-			env:      EnvironmentStaging,
+			env:      oglconfig.EnvironmentStaging,
 			expected: true,
 		},
 		{
 			name:     "valid production",
-			env:      EnvironmentProduction,
+			env:      oglconfig.EnvironmentProduction,
 			expected: true,
 		},
 		{
 			name:     "valid testing",
-			env:      EnvironmentTesting,
+			env:      oglconfig.EnvironmentTesting,
 			expected: true,
 		},
 		{
 			name:     "invalid environment",
-			env:      Environment("invalid"),
+			env:      oglconfig.Environment("invalid"),
 			expected: false,
 		},
 		{
 			name:     "empty environment",
-			env:      Environment(""),
+			env:      oglconfig.Environment(""),
 			expected: false,
 		},
 	}
@@ -492,53 +504,53 @@ func TestParseEnvironment(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     string
-		expected  Environment
+		expected  oglconfig.Environment
 		shouldErr bool
 	}{
 		{
 			name:      "parse development",
 			input:     "development",
-			expected:  EnvironmentDevelopment,
+			expected:  oglconfig.EnvironmentDevelopment,
 			shouldErr: false,
 		},
 		{
 			name:      "parse staging",
 			input:     "staging",
-			expected:  EnvironmentStaging,
+			expected:  oglconfig.EnvironmentStaging,
 			shouldErr: false,
 		},
 		{
 			name:      "parse production",
 			input:     "production",
-			expected:  EnvironmentProduction,
+			expected:  oglconfig.EnvironmentProduction,
 			shouldErr: false,
 		},
 		{
 			name:      "parse testing",
 			input:     "testing",
-			expected:  EnvironmentTesting,
+			expected:  oglconfig.EnvironmentTesting,
 			shouldErr: false,
 		},
 		{
 			name:      "parse invalid environment",
 			input:     "invalid",
-			expected:  Environment(""),
+			expected:  oglconfig.Environment(""),
 			shouldErr: true,
 		},
 		{
 			name:      "parse empty string",
 			input:     "",
-			expected:  Environment(""),
+			expected:  oglconfig.Environment(""),
 			shouldErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseEnvironment(tt.input)
+			got, err := oglconfig.ParseEnvironment(tt.input)
 			if tt.shouldErr {
 				assert.Error(t, err)
-				assert.ErrorIs(t, err, ErrInvalidEnvironment)
+				assert.ErrorIs(t, err, oglconfig.ErrInvalidEnvironment)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, got)
@@ -548,13 +560,13 @@ func TestParseEnvironment(t *testing.T) {
 }
 
 func TestEnvironmentValues(t *testing.T) {
-	values := EnvironmentValues()
+	values := oglconfig.EnvironmentValues()
 
 	assert.Len(t, values, 4)
-	assert.Contains(t, values, EnvironmentDevelopment)
-	assert.Contains(t, values, EnvironmentStaging)
-	assert.Contains(t, values, EnvironmentProduction)
-	assert.Contains(t, values, EnvironmentTesting)
+	assert.Contains(t, values, oglconfig.EnvironmentDevelopment)
+	assert.Contains(t, values, oglconfig.EnvironmentStaging)
+	assert.Contains(t, values, oglconfig.EnvironmentProduction)
+	assert.Contains(t, values, oglconfig.EnvironmentTesting)
 }
 
 func TestLoad_WithDebugLevel(t *testing.T) {
@@ -585,12 +597,15 @@ name = "testdb"
 		"APP_ENV":     "production",
 		"APP_NAME":    "TestApp",
 	}
+	for key, value := range envs {
+		t.Setenv(key, value)
+	}
 
-	config, err := Load(ctx, envs)
+	config, err := Load(ctx, "")
 
 	require.NoError(t, err)
 	require.NotNil(t, config)
-	assert.Equal(t, LogLevel("debug"), config.LogLevel)
+	assert.Equal(t, "debug", config.LogLevel.String())
 	assert.Equal(t, slog.LevelDebug, config.LogLevel.SlogLevel())
 }
 
@@ -651,12 +666,15 @@ name = "testdb"
 				"APP_ENV":     "development",
 				"APP_NAME":    "TestApp",
 			}
+			for key, value := range envs {
+				t.Setenv(key, value)
+			}
 
-			config, err := Load(ctx, envs)
+			config, err := Load(ctx, "")
 
 			require.NoError(t, err)
 			require.NotNil(t, config)
-			assert.Equal(t, LogLevel(tt.levelString), config.LogLevel)
+			assert.Equal(t, tt.levelString, config.LogLevel.String())
 			assert.Equal(t, tt.expectedLevel, config.LogLevel.SlogLevel())
 		})
 	}
@@ -666,27 +684,27 @@ func TestLoad_AllEnvironments(t *testing.T) {
 	tests := []struct {
 		name        string
 		appEnv      string
-		expectedEnv Environment
+		expectedEnv oglconfig.Environment
 	}{
 		{
 			name:        "development environment",
 			appEnv:      "development",
-			expectedEnv: EnvironmentDevelopment,
+			expectedEnv: oglconfig.EnvironmentDevelopment,
 		},
 		{
 			name:        "staging environment",
 			appEnv:      "staging",
-			expectedEnv: EnvironmentStaging,
+			expectedEnv: oglconfig.EnvironmentStaging,
 		},
 		{
 			name:        "production environment",
 			appEnv:      "production",
-			expectedEnv: EnvironmentProduction,
+			expectedEnv: oglconfig.EnvironmentProduction,
 		},
 		{
 			name:        "testing environment",
 			appEnv:      "testing",
-			expectedEnv: EnvironmentTesting,
+			expectedEnv: oglconfig.EnvironmentTesting,
 		},
 	}
 
@@ -719,7 +737,11 @@ name = "testdb"
 				"APP_NAME":    "TestApp",
 			}
 
-			config, err := Load(ctx, envs)
+			for key, value := range envs {
+				t.Setenv(key, value)
+			}
+
+			config, err := Load(ctx, "")
 
 			require.NoError(t, err)
 			require.NotNil(t, config)

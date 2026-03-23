@@ -18,6 +18,7 @@ import (
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
+	domainUser "github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
@@ -28,6 +29,8 @@ import (
 
 const relayTableName = "auth.event"
 const AppName = "Auth"
+
+var NotifyEvents = domainUser.AllEvents
 
 // App implements oglcore.App for the auth service.
 type App struct {
@@ -78,12 +81,11 @@ func New(infra Infrastructure) (*App, error) {
 		Config:      cfg.Server,
 		Handler:     h2cHandler,
 		Logger:      infra.Logger,
-		HealthFns:   oglserver.HealthFns{"database-message": userRepo.Health},
+		HealthFns:   oglserver.HealthFns{"database": userRepo.Health},
 		LogPayloads: true,
 	}
 
-	withDebug := cfg.Environment == config.EnvironmentDevelopment
-	server := oglserver.NewHTTPServer2(withDebug, httpInfra)
+	server := oglserver.NewHTTPServer2(cfg.Environment.IsDev(), httpInfra)
 
 	return &App{
 		relay:       ogloutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
