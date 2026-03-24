@@ -45,23 +45,13 @@ type Infrastructure struct {
 	DBPool   *pgxpool.Pool
 	EventBus oglevents.SystemEventBus
 	Logger   *slog.Logger
-	cfg      *config.Config
-}
-
-func (i *Infrastructure) WithConfig(cfg *config.Config) Infrastructure {
-	i.cfg = cfg
-	return *i
 }
 
 // New wires the auth module with all its dependencies.
 func New(infra Infrastructure) (*module, error) {
-	var cfg = infra.cfg
-	if cfg == nil {
-		var err error
-		cfg, err = config.Load(context.Background(), "")
-		if err != nil {
-			return nil, eris.Wrap(err, "app failed to load config")
-		}
+	cfg, err := config.Load(context.Background(), "")
+	if err != nil {
+		return nil, eris.Wrap(err, "app failed to load config")
 	}
 
 	userRepo := postgres.NewUserRepository(infra.DBPool)
