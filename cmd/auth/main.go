@@ -27,9 +27,11 @@ const (
 
 var errFormater = eris.ToJSON
 
-var logger *slog.Logger
-var dbPool *pgxpool.Pool
-var exitCode = 0
+var (
+	logger   *slog.Logger
+	dbPool   *pgxpool.Pool
+	exitCode = 0
+)
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

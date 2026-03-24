@@ -75,7 +75,6 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 
 		return nil
 	})
-
 	if err != nil {
 		return uuid.Nil, eris.Wrap(err, "register transaction failed")
 	}
@@ -125,7 +124,6 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 
 		return nil
 	})
-
 	if err != nil {
 		return "", uuid.Nil, eris.Wrap(err, "login transaction failed")
 	}
@@ -213,7 +211,6 @@ func (s *AuthApplicationService) ChangePassword(
 
 		return nil
 	})
-
 	if err != nil {
 		return eris.Wrap(err, "change password transaction failed")
 	}
@@ -239,7 +236,6 @@ func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUI
 
 		return nil
 	})
-
 	if err != nil {
 		return eris.Wrap(err, "delete user transaction failed")
 	}

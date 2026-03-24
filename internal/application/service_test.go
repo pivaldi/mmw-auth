@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
-	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
+	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
+	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 )
 
 // --- Mock repos ---
@@ -34,6 +34,7 @@ func (m *mockUserRepo) Save(_ context.Context, u *user.User) error {
 	m.byID[u.ID()] = u
 	return nil
 }
+
 func (m *mockUserRepo) FindByLogin(_ context.Context, login user.Login) (*user.User, error) {
 	u, ok := m.byLogin[login.String()]
 	if !ok {
@@ -41,6 +42,7 @@ func (m *mockUserRepo) FindByLogin(_ context.Context, login user.Login) (*user.U
 	}
 	return u, nil
 }
+
 func (m *mockUserRepo) FindByID(_ context.Context, id uuid.UUID) (*user.User, error) {
 	u, ok := m.byID[id]
 	if !ok {
@@ -65,6 +67,7 @@ func (m *mockSessionRepo) Save(_ context.Context, s *authdomain.Session) error {
 	m.byToken[s.Token()] = s
 	return nil
 }
+
 func (m *mockSessionRepo) FindByToken(_ context.Context, token string) (*authdomain.Session, error) {
 	s, ok := m.byToken[token]
 	if !ok {
@@ -87,10 +90,12 @@ func (m *mockUoW) WithTransaction(ctx context.Context, fn func(context.Context) 
 }
 
 // Interface compliance checks
-var _ ports.UserRepository    = (*mockUserRepo)(nil)
-var _ ports.SessionRepository = (*mockSessionRepo)(nil)
-var _ ports.UnitOfWork        = (*mockUoW)(nil)
-var _ ports.EventDispatcher   = (*mockDispatcher)(nil)
+var (
+	_ ports.UserRepository    = (*mockUserRepo)(nil)
+	_ ports.SessionRepository = (*mockSessionRepo)(nil)
+	_ ports.UnitOfWork        = (*mockUoW)(nil)
+	_ ports.EventDispatcher   = (*mockDispatcher)(nil)
+)
 
 func newTestService() (*application.AuthApplicationService, *mockUserRepo, *mockSessionRepo, *mockDispatcher) {
 	ur := &mockUserRepo{}
