@@ -57,7 +57,7 @@ func main() {
 		return
 	}
 
-	authLogger := logger.With("app", auth.AppName)
+	authLogger := logger.With("module", auth.ModuleName)
 
 	watermillLogger := watermill.NewSlogLogger(authLogger)
 	rawBus := gochannel.NewGoChannel(
@@ -97,7 +97,7 @@ func main() {
 	}
 
 	// notifLogger := logger.With("module", "notifications")
-	modules := []oglcore.App{
+	modules := []oglcore.Module{
 		authApp,
 		// Use RabitMQ consummer instead
 		// notifications.Build(rawBus, notifLogger),

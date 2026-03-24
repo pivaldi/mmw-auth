@@ -28,12 +28,12 @@ import (
 )
 
 const relayTableName = "auth.event"
-const AppName = "Auth"
+const ModuleName = "Auth"
 
 var NotifyEvents = domainUser.AllEvents
 
-// App implements oglcore.App for the auth service.
-type App struct {
+// module implements oglcore.module for the auth service.
+type module struct {
 	relay       *ogloutbox.EventsRelay
 	server      *oglserver.HTTPServer
 	logger      *slog.Logger
@@ -54,7 +54,7 @@ func (i *Infrastructure) WithConfig(cfg *config.Config) Infrastructure {
 }
 
 // New wires the auth module with all its dependencies.
-func New(infra Infrastructure) (*App, error) {
+func New(infra Infrastructure) (*module, error) {
 	var cfg = infra.cfg
 	if cfg == nil {
 		var err error
@@ -87,7 +87,7 @@ func New(infra Infrastructure) (*App, error) {
 
 	server := oglserver.NewHTTPServer2(cfg.Environment.IsDev(), httpInfra)
 
-	return &App{
+	return &module{
 		relay:       ogloutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
 		server:      server,
 		logger:      infra.Logger,
@@ -96,7 +96,7 @@ func New(infra Infrastructure) (*App, error) {
 }
 
 // Start runs the HTTP server and the outbox relay concurrently.
-func (m *App) Start(ctx context.Context) error {
+func (m *module) Start(ctx context.Context) error {
 	m.logger.Info("starting auth module")
 	g, gCtx := errgroup.WithContext(ctx)
 
@@ -109,15 +109,15 @@ func (m *App) Start(ctx context.Context) error {
 		return nil
 	})
 
-	return eris.Wrapf(g.Wait(), "%s failure", AppName)
+	return eris.Wrapf(g.Wait(), "%s failure", ModuleName)
 }
 
 // Ensure Module implements defauth.AuthService so it can be passed directly to
 // defauth.NewInprocClient without an intermediate wrapper.
-var _ defauth.AuthService = (*App)(nil)
+var _ defauth.AuthService = (*module)(nil)
 
 // GetUser delegates to the internal auth application service.
-func (m *App) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
+func (m *module) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
 	u, err := m.authService.GetUser(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting user: %w", err)
@@ -127,7 +127,7 @@ func (m *App) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) 
 }
 
 // ValidateToken delegates to the internal auth application service.
-func (m *App) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
+func (m *module) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
 	id, err := m.authService.ValidateToken(ctx, token)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("validating token: %w", err)
