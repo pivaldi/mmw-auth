@@ -11,9 +11,9 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ovya/ogl/platform"
 	oglcore "github.com/ovya/ogl/platform/core"
 	oglevents "github.com/ovya/ogl/platform/events"
-	oglrunner "github.com/ovya/ogl/platform/runner"
 	oglslog "github.com/ovya/ogl/slog"
 	auth "github.com/pivaldi/mmw-auth"
 	authConfig "github.com/pivaldi/mmw-auth/config"
@@ -103,9 +103,7 @@ func main() {
 		// notifications.Build(rawBus, notifLogger),
 	}
 
-	platformRuner := oglrunner.New(logger, modules)
-
-	err = platformRuner.Run(ctx)
+	err = platform.New(logger, modules).Run(ctx)
 	if err != nil {
 		logError("platform error", err)
 		return

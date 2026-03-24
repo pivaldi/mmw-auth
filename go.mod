@@ -8,8 +8,8 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/ovya/ogl v0.0.0-20260321143034-879a52497e75
-	github.com/pivaldi/mmw-contracts v0.0.0-20260321163605-264690edbe4e
+	github.com/ovya/ogl v0.0.0-20260324114944-8d3d32e966e8
+	github.com/pivaldi/mmw-contracts v0.0.0-20260323180942-26dc4fc984be
 	github.com/rotisserie/eris v0.5.4
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.48.0
