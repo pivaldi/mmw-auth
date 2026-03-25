@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	oglpguow "github.com/ovya/ogl/pg/uow"
-	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
+	"github.com/pivaldi/mmw-auth/internal/domain"
 	"github.com/rotisserie/eris"
 )
 
@@ -22,7 +22,7 @@ func NewSessionRepository(pool *pgxpool.Pool) *SessionRepository {
 	return &SessionRepository{pool: pool}
 }
 
-func (r *SessionRepository) Save(ctx context.Context, s *authdomain.Session) error {
+func (r *SessionRepository) Save(ctx context.Context, s *domain.Session) error {
 	exec := oglpguow.GetExecutor(ctx, r.pool)
 	_, err := exec.Exec(ctx,
 		`INSERT INTO auth.sessions (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)`,
@@ -33,7 +33,7 @@ func (r *SessionRepository) Save(ctx context.Context, s *authdomain.Session) err
 }
 
 // FindByToken retrieves an unexpired session by its token.
-func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*authdomain.Session, error) {
+func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*domain.Session, error) {
 	exec := oglpguow.GetExecutor(ctx, r.pool)
 	row := exec.QueryRow(ctx,
 		`SELECT id, user_id, token, expires_at FROM auth.sessions WHERE token = $1 AND expires_at > NOW()`,
@@ -54,5 +54,5 @@ func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*aut
 		return nil, eris.Wrap(err, "scan session row")
 	}
 
-	return authdomain.ReconstructSession(id, userID, tok, expiresAt), nil
+	return domain.ReconstructSession(id, userID, tok, expiresAt), nil
 }

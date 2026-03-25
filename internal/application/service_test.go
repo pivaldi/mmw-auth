@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
-	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
-	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
+	"github.com/pivaldi/mmw-auth/internal/domain/user"
 )
 
 // --- Mock repos ---
@@ -55,20 +55,20 @@ func (m *mockUserRepo) Delete(_ context.Context, id uuid.UUID) error { m.deleted
 func (m *mockUserRepo) Health(_ context.Context) (any, error)        { return nil, nil }
 
 type mockSessionRepo struct {
-	saved   *authdomain.Session
-	byToken map[string]*authdomain.Session
+	saved   *domain.Session
+	byToken map[string]*domain.Session
 }
 
-func (m *mockSessionRepo) Save(_ context.Context, s *authdomain.Session) error {
+func (m *mockSessionRepo) Save(_ context.Context, s *domain.Session) error {
 	m.saved = s
 	if m.byToken == nil {
-		m.byToken = make(map[string]*authdomain.Session)
+		m.byToken = make(map[string]*domain.Session)
 	}
 	m.byToken[s.Token()] = s
 	return nil
 }
 
-func (m *mockSessionRepo) FindByToken(_ context.Context, token string) (*authdomain.Session, error) {
+func (m *mockSessionRepo) FindByToken(_ context.Context, token string) (*domain.Session, error) {
 	s, ok := m.byToken[token]
 	if !ok {
 		return nil, errors.New("not found")

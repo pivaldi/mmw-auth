@@ -9,8 +9,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
-	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
-	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
+	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
 )
@@ -114,7 +114,7 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 			return eris.Wrap(err, "dispatching events")
 		}
 
-		sess := authdomain.NewSession(u.ID(), t, tokenDuration)
+		sess := domain.NewSession(u.ID(), t, tokenDuration)
 		if err := s.sessionRepo.Save(ctx, sess); err != nil {
 			return eris.Wrap(err, "saving session")
 		}

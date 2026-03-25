@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	authdomain "github.com/pivaldi/mmw-auth/internal/domain/auth"
-	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
+	"github.com/pivaldi/mmw-auth/internal/domain/user"
 )
 
 // UserRepository defines persistence operations for the User aggregate.
@@ -27,9 +27,9 @@ type UserRepository interface {
 // SessionRepository defines persistence operations for sessions.
 type SessionRepository interface {
 	// Save persists a new session.
-	Save(ctx context.Context, s *authdomain.Session) error
+	Save(ctx context.Context, s *domain.Session) error
 	// FindByToken retrieves a session by its token.
-	FindByToken(ctx context.Context, token string) (*authdomain.Session, error)
+	FindByToken(ctx context.Context, token string) (*domain.Session, error)
 }
 
 // UnitOfWork manages transaction boundaries.

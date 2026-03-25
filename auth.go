@@ -18,7 +18,7 @@ import (
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
-	domainuser "github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	domainuser "github.com/pivaldi/mmw-auth/internal/domain/user"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"

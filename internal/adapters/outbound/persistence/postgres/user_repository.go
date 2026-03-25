@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	ogldb "github.com/ovya/ogl/db"
 	oglpguow "github.com/ovya/ogl/pg/uow"
-	"github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	"github.com/rotisserie/eris"
 )
 
