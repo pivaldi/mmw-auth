@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,7 +15,7 @@ import (
 	oglevents "github.com/ovya/ogl/platform/events"
 	oglslog "github.com/ovya/ogl/slog"
 	auth "github.com/pivaldi/mmw-auth"
-	authConfig "github.com/pivaldi/mmw-auth/config"
+	authconfig "github.com/pivaldi/mmw-auth/config"
 	"github.com/rotisserie/eris"
 )
 
@@ -43,18 +42,16 @@ func main() {
 
 	var err error
 
-	authConf, err := authConfig.Load(ctx, "AUTH_")
+	authConf, err := authconfig.Load(ctx, "AUTH_")
 	if err != nil {
-		exitCode = 1
-		fmt.Fprint(os.Stdout, eris.ToString(err, true)+"\n")
+		logError("loading auth config", err)
 
 		return
 	}
 
 	logger, err = oglslog.New(oglslog.HandlerText, authConf.LogLevel.SlogLevel())
 	if err != nil {
-		exitCode = 1
-		fmt.Fprint(os.Stdout, eris.ToString(err, true)+"\n")
+		logError("creating logger", err)
 
 		return
 	}

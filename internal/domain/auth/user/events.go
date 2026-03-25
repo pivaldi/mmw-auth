@@ -24,8 +24,11 @@ var AllEvents = []string{
 
 // DomainEvent is the interface all auth domain events implement.
 type DomainEvent interface {
+	// EventType returns the string identifier for this event kind.
 	EventType() string
+	// AggregateID returns the ID of the aggregate that emitted this event.
 	AggregateID() string
+	// OccurredAt returns when the event was emitted.
 	OccurredAt() time.Time
 }
 
@@ -36,7 +39,7 @@ type UserRegistered struct {
 	Login       string
 }
 
-func (e UserRegistered) EventType() string     { return EventUserRegistered }
+func (UserRegistered) EventType() string       { return EventUserRegistered }
 func (e UserRegistered) AggregateID() string   { return e.aggregateID }
 func (e UserRegistered) OccurredAt() time.Time { return e.occurredAt }
 
@@ -56,7 +59,7 @@ type UserDeleted struct {
 	occurredAt  time.Time
 }
 
-func (e UserDeleted) EventType() string     { return EventUserDeleted }
+func (UserDeleted) EventType() string       { return EventUserDeleted }
 func (e UserDeleted) AggregateID() string   { return e.aggregateID }
 func (e UserDeleted) OccurredAt() time.Time { return e.occurredAt }
 
@@ -75,7 +78,7 @@ type PasswordChanged struct {
 	occurredAt  time.Time
 }
 
-func (e PasswordChanged) EventType() string     { return EventPasswordChanged }
+func (PasswordChanged) EventType() string       { return EventPasswordChanged }
 func (e PasswordChanged) AggregateID() string   { return e.aggregateID }
 func (e PasswordChanged) OccurredAt() time.Time { return e.occurredAt }
 
@@ -94,7 +97,7 @@ type UserLoggedIn struct {
 	occurredAt  time.Time
 }
 
-func (e UserLoggedIn) EventType() string     { return EventUserLoggedIn }
+func (UserLoggedIn) EventType() string       { return EventUserLoggedIn }
 func (e UserLoggedIn) AggregateID() string   { return e.aggregateID }
 func (e UserLoggedIn) OccurredAt() time.Time { return e.occurredAt }
 

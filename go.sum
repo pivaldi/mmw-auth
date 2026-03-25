@@ -126,8 +126,8 @@ github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJwooC2xJA040=
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
-github.com/ovya/ogl v0.0.0-20260324114944-8d3d32e966e8 h1:vA9zZHA5+ZqKue1oY+9KuledHkdbxB9318wULEklrfQ=
-github.com/ovya/ogl v0.0.0-20260324114944-8d3d32e966e8/go.mod h1:2MWHD8eBlVpKVY42ZhgfiDZ5VsAlPwX1cCXGxIkYTD8=
+github.com/ovya/ogl v0.0.0-20260324224052-968c2f821ca3 h1:5xjke/Tt20LMd0pkJ9/nmm5b6vc+tO8790VrvpWNf3o=
+github.com/ovya/ogl v0.0.0-20260324224052-968c2f821ca3/go.mod h1:2MWHD8eBlVpKVY42ZhgfiDZ5VsAlPwX1cCXGxIkYTD8=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/pivaldi/goose/v3 v3.27.1 h1:i58cgu7yL1Vqz7qxFIWioNLhLyhMeadWFpCfBAcnDfM=

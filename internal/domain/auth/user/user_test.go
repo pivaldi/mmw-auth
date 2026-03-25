@@ -139,8 +139,8 @@ func TestUserRegistered_MarshalJSON(t *testing.T) {
 		t.Fatalf("MarshalJSON: %v", err)
 	}
 	s := string(b)
-	if !strings.Contains(s, `"aggregate_id"`) {
-		t.Errorf("expected aggregate_id in JSON, got: %s", s)
+	if !strings.Contains(s, `"aggregateId"`) {
+		t.Errorf("expected aggregateId in JSON, got: %s", s)
 	}
 	if !strings.Contains(s, `"alice"`) {
 		t.Errorf("expected login in JSON, got: %s", s)
@@ -149,10 +149,16 @@ func TestUserRegistered_MarshalJSON(t *testing.T) {
 
 func TestReconstructUser_noEvents(t *testing.T) {
 	id := uuid.New()
-	l, _ := user.NewLogin("alice")
 	ph, _ := user.NewPasswordHash("secret")
 	now := time.Now()
-	u := user.ReconstructUser(id, l, ph, now, now)
+	snap := user.UserSnapshot{
+		ID:           id,
+		Login:        "alice",
+		PasswordHash: ph.String(),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	u := user.ReconstructUser(&snap)
 	if len(u.ClearEvents()) != 0 {
 		t.Error("ReconstructUser must not emit events")
 	}

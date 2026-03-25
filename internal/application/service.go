@@ -190,8 +190,7 @@ func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defau
 func (s *AuthApplicationService) ChangePassword(
 	ctx context.Context,
 	userID uuid.UUID,
-	oldPassword string,
-	newPassword string,
+	oldPassword, newPassword string,
 ) error {
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)

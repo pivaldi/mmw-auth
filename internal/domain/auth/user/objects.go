@@ -17,15 +17,15 @@ type Login struct {
 
 // NewLogin validates and wraps a login string.
 func NewLogin(s string) (Login, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
+	v := strings.TrimSpace(s)
+	if v == "" {
 		return Login{}, errors.New("login cannot be empty")
 	}
-	if len(s) > maxLoginLen {
+	if len(v) > maxLoginLen {
 		return Login{}, fmt.Errorf("login cannot exceed %d characters", maxLoginLen)
 	}
 
-	return Login{value: s}, nil
+	return Login{value: v}, nil
 }
 
 func (l Login) String() string { return l.value }

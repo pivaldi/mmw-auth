@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -43,15 +44,36 @@ func Create(id uuid.UUID, login Login, plainPassword string) (*User, error) {
 	return u, nil
 }
 
+// Snapshot returns the Memento for this User — a plain-data representation
+// of the aggregate's current state, suitable for persistence.
+// events is not included; it is runtime state only.
+func (u *User) Snapshot() UserSnapshot {
+	return UserSnapshot{
+		ID:           u.id,
+		Login:        u.login.String(),
+		PasswordHash: u.passwordHash.String(),
+		CreatedAt:    u.createdAt,
+		UpdatedAt:    u.updatedAt,
+	}
+}
+
 // ReconstructUser restores a User from persisted state without re-hashing.
 // Only repositories should call this.
-func ReconstructUser(id uuid.UUID, login Login, passwordHash PasswordHash, createdAt, updatedAt time.Time) *User {
+// Panics if the snapshot contains values that violate basic type invariants —
+// this should never happen since the DB is the authoritative source of truth.
+func ReconstructUser(snap *UserSnapshot) *User {
+	login, err := NewLogin(snap.Login)
+	if err != nil {
+		panic(fmt.Sprintf("ReconstructUser: invalid login from DB: %v", err))
+	}
+
 	return &User{
-		id:           id,
+		id:           snap.ID,
 		login:        login,
-		passwordHash: passwordHash,
-		createdAt:    createdAt,
-		updatedAt:    updatedAt,
+		passwordHash: NewHashedPassword(snap.PasswordHash),
+		createdAt:    snap.CreatedAt,
+		updatedAt:    snap.UpdatedAt,
+		events:       []DomainEvent{},
 	}
 }
 
@@ -115,6 +137,6 @@ func (u *User) ClearEvents() []DomainEvent {
 }
 
 // addEvent adds a domain event to the unpublished events list
-func (t *User) addEvent(event DomainEvent) {
-	t.events = append(t.events, event)
+func (u *User) addEvent(event DomainEvent) {
+	u.events = append(u.events, event)
 }

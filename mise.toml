@@ -19,11 +19,12 @@ r = "mise run"
 CONTRACTS_DIR = "{{config_root}}/../../contracts"
 GOTESTSUM_OPTIONS = "--format testdox"
 MIGRATIONS_DIR= "{{config_root}}/internal/infra/persistence/migrations/scripts"
-
-[env]
 BINARY_NAME = "auth"
 BINARY_PATH = "./cmd/auth"
 BUILD_DIR = "bin"
+COMPILE_OPTIONS="-tags no_clickhouse,no_mysql,no_mssql"
+
+[env]
 _.file = ".envrc"  # Load .envrc file if it exists
 APP_ENV = { required = true }
 APP_NAME = { required = true }
@@ -71,15 +72,15 @@ run = """
 description = "Build the application binary"
 depends = ["generate"]
 run = """
-[ -e ${BUILD_DIR} ] || mkdir -p ${BUILD_DIR}
-go build -o ${BUILD_DIR}/${BINARY_NAME} -v ${BINARY_PATH}
+[ -e {{vars.BUILD_DIR}} ] || mkdir -p {{vars.BUILD_DIR}}
+go build {{vars.COMPILE_OPTIONS}} -o {{vars.BUILD_DIR}}/{{vars.BINARY_NAME}} -v {{vars.BINARY_PATH}}
 """
 
 # Running tasks
 [tasks.run]
 description = "Run the application"
 # depends = ["generate"] # See https://buf.build/docs/bsr/rate-limits/ for details about BSR rate limiting.
-run = "go run ${BINARY_PATH}/main.go"
+run = "go run {{vars.BINARY_PATH}}/main.go"
 
 [tasks."run:dev"]
 description = "Run with hot reload (requires air)"
@@ -142,39 +143,37 @@ alias = "pc"
 description = "Build the database migrations (needed to embed go migrations)"
 # sources = ["cmd/migration/*.go", "{{config_root}}/internal/infra/persistence/migrations/scripts/*.go"]
 run = """
-  go build -o ${BUILD_DIR}/ cmd/migration/migrate.go &&
-  ls -l ${BUILD_DIR}/migrate
+  go build {{vars.COMPILE_OPTIONS}} -o {{vars.BUILD_DIR}}/ cmd/migration/migrate.go &&
+  ls -l {{vars.BUILD_DIR}}/migrate
 """
 
 [tasks."db:migrate:up"]
-# depends = ["db:migrate:build"]
 description = "Run database migrations up"
-run = "go run cmd/migration/*.go up"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go up"
 
 [tasks."db:migrate:down"]
-depends = ["db:migrate:build"]
 description = "Run database migrations down"
-run = "${BUILD_DIR}/migrate down"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go down"
 
 [tasks."db:migrate:create"]
 description = "Create new SQL/Go migration"
-run = "go run cmd/migration/*.go create -d {{vars.MIGRATIONS_DIR}}"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go create -d {{vars.MIGRATIONS_DIR}}"
 
 [tasks."db:migrate:version"]
 description = "Show current migration version"
-run = "go run cmd/migration/*.go version"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go version"
 
 [tasks."db:migrate:fix"]
 description = "Fix the order of migrations"
-run = "go run cmd/migration/*.go fix"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go fix"
 
 [tasks."db:migrate:reset"]
 description = "Down all the migrations"
-run = "go run cmd/migration/*.go reset"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go reset"
 
 [tasks."db:migrate:status"]
 description = "Show current migration statud"
-run = "go run cmd/migration/*.go status"
+run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go status"
 
 
 [tasks."arch:graph"]

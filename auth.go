@@ -18,7 +18,7 @@ import (
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
-	domainUser "github.com/pivaldi/mmw-auth/internal/domain/auth/user"
+	domainuser "github.com/pivaldi/mmw-auth/internal/domain/auth/user"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
@@ -32,7 +32,7 @@ const (
 	ModuleName     = "Auth"
 )
 
-var NotifyEvents = domainUser.AllEvents
+var NotifyEvents = domainuser.AllEvents
 
 // module implements oglcore.module for the auth service.
 type module struct {
@@ -58,7 +58,7 @@ func New(infra Infrastructure) (*module, error) {
 
 	userRepo := postgres.NewUserRepository(infra.DBPool)
 	sessionRepo := postgres.NewSessionRepository(infra.DBPool)
-	uow := ogluow.NewUnitOfWork(infra.DBPool)
+	uow := ogluow.New(infra.DBPool)
 	dispatcher := outboxevents.NewOutboxDispatcher(infra.DBPool)
 
 	authService := application.NewAuthService(userRepo, sessionRepo, uow, dispatcher, cfg.JWT.Secret)
