@@ -13,12 +13,12 @@ import (
 	ogluow "github.com/ovya/ogl/pg/uow"
 	oglevents "github.com/ovya/ogl/platform/events"
 	oglserver "github.com/ovya/ogl/platform/server"
-	"github.com/pivaldi/mmw-auth/config"
 	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/connect"
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	domainuser "github.com/pivaldi/mmw-auth/internal/domain/user"
+	"github.com/pivaldi/mmw-auth/internal/infra/config"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
@@ -34,8 +34,8 @@ const (
 
 var NotifyEvents = domainuser.AllEvents
 
-// module implements oglcore.module for the auth service.
-type module struct {
+// Module implements oglcore.Module for the auth service.
+type Module struct {
 	relay       *ogloutbox.EventsRelay
 	server      *oglserver.HTTPServer
 	logger      *slog.Logger
@@ -50,7 +50,7 @@ type Infrastructure struct {
 }
 
 // New wires the auth module with all its dependencies.
-func New(infra Infrastructure) (*module, error) {
+func New(infra Infrastructure) (*Module, error) {
 	cfg, err := config.Load(context.Background(), "")
 	if err != nil {
 		return nil, eris.Wrap(err, "app failed to load config")
@@ -80,7 +80,7 @@ func New(infra Infrastructure) (*module, error) {
 
 	server := oglserver.NewHTTPServer(httpInfra)
 
-	return &module{
+	return &Module{
 		relay:       ogloutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
 		server:      server,
 		logger:      infra.Logger,
@@ -89,7 +89,7 @@ func New(infra Infrastructure) (*module, error) {
 }
 
 // Start runs the HTTP server and the outbox relay concurrently.
-func (m *module) Start(ctx context.Context) error {
+func (m *Module) Start(ctx context.Context) error {
 	m.logger.Info("starting auth module")
 	g, gCtx := errgroup.WithContext(ctx)
 
@@ -107,10 +107,10 @@ func (m *module) Start(ctx context.Context) error {
 
 // Ensure Module implements defauth.AuthService so it can be passed directly to
 // defauth.NewInprocClient without an intermediate wrapper.
-var _ defauth.AuthService = (*module)(nil)
+var _ defauth.AuthService = (*Module)(nil)
 
 // GetUser delegates to the internal auth application service.
-func (m *module) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
+func (m *Module) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
 	u, err := m.authService.GetUser(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting user: %w", err)
@@ -120,7 +120,7 @@ func (m *module) GetUser(ctx context.Context, id string) (*defauth.UserDTO, erro
 }
 
 // ValidateToken delegates to the internal auth application service.
-func (m *module) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
+func (m *Module) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
 	id, err := m.authService.ValidateToken(ctx, token)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("validating token: %w", err)

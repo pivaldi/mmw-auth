@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/pivaldi/mmw-auth/config"
+	"github.com/pivaldi/mmw-auth/internal/infra/config"
 	"github.com/pivaldi/mmw-auth/internal/infra/persistence/migrations"
 
 	// Needed to embed all the go migrations
