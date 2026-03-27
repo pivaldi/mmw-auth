@@ -172,7 +172,7 @@ func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString 
 }
 
 // GetUser retrieves a user by UUID for cross-service in-process access.
-func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
+func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defauth.User, error) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, ErrUserNotFound
@@ -183,7 +183,7 @@ func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defau
 		return nil, ErrUserNotFound
 	}
 
-	return &defauth.UserDTO{UUID: u.ID(), Login: u.Login().String()}, nil
+	return &defauth.User{Id: u.ID().String(), Login: u.Login().String()}, nil
 }
 
 // ChangePassword replaces the user's password after verifying the old one.

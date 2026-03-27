@@ -8,7 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	oglpguow "github.com/ovya/ogl/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain/user"
+	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // OutboxDispatcher writes domain events to the auth.event outbox table.
@@ -33,7 +36,7 @@ func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []user.DomainEve
 	const query = `INSERT INTO auth.event (event_type, payload, occurred_at) VALUES ($1, $2::jsonb, $3)`
 
 	for _, evt := range events {
-		payload, err := json.Marshal(evt)
+		payload, err := marshalEvent(evt)
 		if err != nil {
 			return eris.Wrapf(err, "marshal event %s", evt.EventType())
 		}
@@ -51,4 +54,29 @@ func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []user.DomainEve
 	}
 
 	return nil
+}
+
+// marshalEvent serialises a domain event to JSON for the outbox table.
+//
+// UserDeleted events are serialised as protojson so the payload field names
+// match what proto-aware consumers expect (userId/deletedAt in camelCase).
+//
+// All other event types fall back to encoding/json via their MarshalJSON methods.
+// If a new event type gains a proto-aware consumer, add a branch here — the
+// fallback will silently produce wrong field names if left unhandled.
+func marshalEvent(evt user.DomainEvent) ([]byte, error) {
+	if e, ok := evt.(user.UserDeleted); ok {
+		pbEvt := &authdef.UserDeletedEvent{
+			UserId:    e.AggregateID(),
+			DeletedAt: timestamppb.New(e.OccurredAt()),
+		}
+
+		payload, err := protojson.Marshal(pbEvt)
+
+		return payload, eris.Wrap(err, "marshal UserDeletedEvent as protojson")
+	}
+
+	payload, err := json.Marshal(evt)
+
+	return payload, eris.Wrap(err, "marshal domain event as json")
 }

@@ -17,9 +17,8 @@ import (
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
-	domainuser "github.com/pivaldi/mmw-auth/internal/domain/user"
 	"github.com/pivaldi/mmw-auth/internal/infra/config"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
+	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
 	"golang.org/x/net/http2"
@@ -31,8 +30,6 @@ const (
 	relayTableName = "auth.event"
 	ModuleName     = "Auth"
 )
-
-var NotifyEvents = domainuser.AllEvents
 
 // Module implements oglcore.Module for the auth service.
 type Module struct {
@@ -107,10 +104,10 @@ func (m *Module) Start(ctx context.Context) error {
 
 // Ensure Module implements defauth.AuthService so it can be passed directly to
 // defauth.NewInprocClient without an intermediate wrapper.
-var _ defauth.AuthService = (*Module)(nil)
+var _ authdef.AuthService = (*Module)(nil)
 
 // GetUser delegates to the internal auth application service.
-func (m *Module) GetUser(ctx context.Context, id string) (*defauth.UserDTO, error) {
+func (m *Module) GetUser(ctx context.Context, id string) (*authdef.User, error) {
 	u, err := m.authService.GetUser(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting user: %w", err)
