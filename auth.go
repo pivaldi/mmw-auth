@@ -53,10 +53,10 @@ func New(infra Infrastructure) (*Module, error) {
 		return nil, eris.Wrap(err, "app failed to load config")
 	}
 
-	userRepo := postgres.NewUserRepository(infra.DBPool)
-	sessionRepo := postgres.NewSessionRepository(infra.DBPool)
 	uow := ogluow.New(infra.DBPool)
-	dispatcher := outboxevents.NewOutboxDispatcher(infra.DBPool)
+	userRepo := postgres.NewUserRepository(uow)
+	sessionRepo := postgres.NewSessionRepository(uow)
+	dispatcher := outboxevents.NewOutboxDispatcher(uow)
 
 	authService := application.NewAuthService(userRepo, sessionRepo, uow, dispatcher, cfg.JWT.Secret)
 	authHandler := connect.NewAuthHandler(authService)

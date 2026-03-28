@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	oglpguow "github.com/ovya/ogl/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
@@ -18,12 +17,12 @@ import (
 // It uses the active transaction from context (via ogl UoW) so events are
 // written atomically with the domain record.
 type OutboxDispatcher struct {
-	pool *pgxpool.Pool
+	uow *oglpguow.UnitOfWork
 }
 
 // NewOutboxDispatcher creates a new OutboxDispatcher.
-func NewOutboxDispatcher(pool *pgxpool.Pool) *OutboxDispatcher {
-	return &OutboxDispatcher{pool: pool}
+func NewOutboxDispatcher(uow *oglpguow.UnitOfWork) *OutboxDispatcher {
+	return &OutboxDispatcher{uow: uow}
 }
 
 // Dispatch inserts all events into auth.event in a single batch.
@@ -43,7 +42,7 @@ func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []user.DomainEve
 		batch.Queue(query, evt.EventType(), string(payload), evt.OccurredAt())
 	}
 
-	exec := oglpguow.GetExecutor(ctx, d.pool)
+	exec := d.uow.Executor(ctx)
 	br := exec.SendBatch(ctx, batch)
 	defer br.Close()
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	oglpguow "github.com/ovya/ogl/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain"
 	"github.com/rotisserie/eris"
@@ -15,15 +14,15 @@ import (
 
 // SessionRepository is the PostgreSQL implementation of ports.SessionRepository.
 type SessionRepository struct {
-	pool *pgxpool.Pool
+	uow *oglpguow.UnitOfWork
 }
 
-func NewSessionRepository(pool *pgxpool.Pool) *SessionRepository {
-	return &SessionRepository{pool: pool}
+func NewSessionRepository(uow *oglpguow.UnitOfWork) *SessionRepository {
+	return &SessionRepository{uow: uow}
 }
 
 func (r *SessionRepository) Save(ctx context.Context, s *domain.Session) error {
-	exec := oglpguow.GetExecutor(ctx, r.pool)
+	exec := r.uow.Executor(ctx)
 	_, err := exec.Exec(ctx,
 		`INSERT INTO auth.sessions (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)`,
 		s.ID(), s.UserID(), s.Token(), s.ExpiresAt(),
@@ -34,7 +33,7 @@ func (r *SessionRepository) Save(ctx context.Context, s *domain.Session) error {
 
 // FindByToken retrieves an unexpired session by its token.
 func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*domain.Session, error) {
-	exec := oglpguow.GetExecutor(ctx, r.pool)
+	exec := r.uow.Executor(ctx)
 	row := exec.QueryRow(ctx,
 		`SELECT id, user_id, token, expires_at FROM auth.sessions WHERE token = $1 AND expires_at > NOW()`,
 		token,
