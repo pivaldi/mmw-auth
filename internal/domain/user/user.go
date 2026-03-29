@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -21,7 +20,7 @@ type User struct {
 // Create validates inputs, hashes the password, and emits UserRegistered.
 func Create(id uuid.UUID, login Login, plainPassword string) (*User, error) {
 	if plainPassword == "" {
-		return nil, errors.New("password cannot be empty")
+		return nil, ErrInvalidPassword
 	}
 	ph, err := NewPasswordHash(plainPassword)
 	if err != nil {
@@ -92,10 +91,10 @@ func (u *User) CheckPassword(plaintext string) bool {
 // Emits PasswordChanged on success.
 func (u *User) ChangePassword(oldPassword, newPassword string) error {
 	if !u.passwordHash.Verify(oldPassword) {
-		return errors.New("invalid current password")
+		return ErrInvalidCredentials
 	}
 	if newPassword == "" {
-		return errors.New("password cannot be empty")
+		return ErrInvalidPassword
 	}
 	ph, err := NewPasswordHash(newPassword)
 	if err != nil {

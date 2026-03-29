@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -19,10 +18,10 @@ type Login struct {
 func NewLogin(s string) (Login, error) {
 	v := strings.TrimSpace(s)
 	if v == "" {
-		return Login{}, errors.New("login cannot be empty")
+		return Login{}, ErrInvalidLogin
 	}
 	if len(v) > maxLoginLen {
-		return Login{}, fmt.Errorf("login cannot exceed %d characters", maxLoginLen)
+		return Login{}, ErrInvalidLogin
 	}
 
 	return Login{value: v}, nil

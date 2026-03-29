@@ -27,7 +27,7 @@ func (h *AuthHandler) Register(
 ) (*connect.Response[authv1.RegisterResponse], error) {
 	userID, err := h.svc.Register(ctx, req.Msg.GetLogin(), req.Msg.GetPassword())
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connectErrorFrom(err)
 	}
 
 	return connect.NewResponse(&authv1.RegisterResponse{UserId: userID.String()}), nil
@@ -39,11 +39,7 @@ func (h *AuthHandler) Login(
 ) (*connect.Response[authv1.LoginResponse], error) {
 	token, userID, err := h.svc.Login(ctx, req.Msg.GetLogin(), req.Msg.GetPassword())
 	if err != nil {
-		if errors.Is(err, application.ErrInvalidCredentials) {
-			return nil, connect.NewError(connect.CodeUnauthenticated, err)
-		}
-
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connectErrorFrom(err)
 	}
 
 	return connect.NewResponse(&authv1.LoginResponse{
@@ -77,14 +73,7 @@ func (h *AuthHandler) ChangePassword(
 	}
 
 	if err := h.svc.ChangePassword(ctx, userID, req.Msg.GetOldPassword(), req.Msg.GetNewPassword()); err != nil {
-		if errors.Is(err, application.ErrUserNotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, err)
-		}
-		if errors.Is(err, application.ErrInvalidCredentials) {
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
-		}
-
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connectErrorFrom(err)
 	}
 
 	return connect.NewResponse(&authv1.ChangePasswordResponse{}), nil
@@ -100,11 +89,7 @@ func (h *AuthHandler) DeleteUser(
 	}
 
 	if err := h.svc.DeleteUser(ctx, userID); err != nil {
-		if errors.Is(err, application.ErrUserNotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, err)
-		}
-
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connectErrorFrom(err)
 	}
 
 	return connect.NewResponse(&authv1.DeleteUserResponse{}), nil

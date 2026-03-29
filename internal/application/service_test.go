@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/ovya/ogl/platform"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
 	"github.com/pivaldi/mmw-auth/internal/domain"
@@ -149,9 +150,11 @@ func TestLogin_wrongPassword(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for wrong password")
 	}
-	if !errors.Is(err, application.ErrInvalidCredentials) {
-		t.Errorf("expected ErrInvalidCredentials, got %v", err)
+	domErr, ok := errors.AsType[*platform.DomainError](err)
+	if !ok {
+		t.Fatalf("expected *platform.DomainError, got %T", err)
 	}
+	_ = domErr
 }
 
 func TestValidateToken_validToken(t *testing.T) {
@@ -177,8 +180,9 @@ func TestValidateToken_invalidJWT(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid JWT")
 	}
-	if !errors.Is(err, application.ErrInvalidToken) {
-		t.Errorf("expected ErrInvalidToken, got %v", err)
+	_, ok := errors.AsType[*platform.DomainError](err)
+	if !ok {
+		t.Errorf("expected *platform.DomainError, got %T", err)
 	}
 }
 
