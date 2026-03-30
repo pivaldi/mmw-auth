@@ -6,18 +6,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	ogldb "github.com/ovya/ogl/db"
-	oglpguow "github.com/ovya/ogl/pg/uow"
+	"github.com/jackc/pgx/v5/pgconn"
+	pfdb "github.com/piprim/mmw/platform/db"
+	pfpguow "github.com/piprim/mmw/platform/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	"github.com/rotisserie/eris"
 )
 
 // UserRepository is the PostgreSQL implementation of ports.UserRepository.
 type UserRepository struct {
-	uow *oglpguow.UnitOfWork
+	uow *pfpguow.UnitOfWork
 }
 
-func NewUserRepository(uow *oglpguow.UnitOfWork) *UserRepository {
+func NewUserRepository(uow *pfpguow.UnitOfWork) *UserRepository {
 	return &UserRepository{uow: uow}
 }
 
@@ -26,10 +27,18 @@ func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
 	_, err := exec.Exec(ctx,
 		`INSERT INTO auth.users (id, login, password_hash, created_at, updated_at)
 		 VALUES (@id, @login, @password_hash, @created_at, @updated_at)`,
-		pgx.NamedArgs(ogldb.StructArgs(u.Snapshot())),
+		pgx.NamedArgs(pfdb.StructArgs(u.Snapshot())),
 	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return user.ErrUserAlreadyExists
+		}
 
-	return eris.Wrap(err, "save user")
+		return eris.Wrap(err, "save user")
+	}
+
+	return nil
 }
 
 func (r *UserRepository) FindByLogin(ctx context.Context, login user.Login) (*user.User, error) {
@@ -80,7 +89,7 @@ func (r *UserRepository) Update(ctx context.Context, u *user.User) error {
 	exec := r.uow.Executor(ctx)
 	_, err := exec.Exec(ctx,
 		`UPDATE auth.users SET login = @login, password_hash = @password_hash, updated_at = @updated_at WHERE id = @id`,
-		pgx.NamedArgs(ogldb.StructArgs(u.Snapshot())),
+		pgx.NamedArgs(pfdb.StructArgs(u.Snapshot())),
 	)
 
 	return eris.Wrap(err, "update user")

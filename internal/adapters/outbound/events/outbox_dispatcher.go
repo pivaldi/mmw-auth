@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/jackc/pgx/v5"
-	oglpguow "github.com/ovya/ogl/pg/uow"
+	pfpguow "github.com/piprim/mmw/platform/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
@@ -14,14 +14,14 @@ import (
 )
 
 // OutboxDispatcher writes domain events to the auth.event outbox table.
-// It uses the active transaction from context (via ogl UoW) so events are
+// It uses the active transaction from context (via platform UoW) so events are
 // written atomically with the domain record.
 type OutboxDispatcher struct {
-	uow *oglpguow.UnitOfWork
+	uow *pfpguow.UnitOfWork
 }
 
 // NewOutboxDispatcher creates a new OutboxDispatcher.
-func NewOutboxDispatcher(uow *oglpguow.UnitOfWork) *OutboxDispatcher {
+func NewOutboxDispatcher(uow *pfpguow.UnitOfWork) *OutboxDispatcher {
 	return &OutboxDispatcher{uow: uow}
 }
 

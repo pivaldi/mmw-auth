@@ -7,17 +7,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	oglpguow "github.com/ovya/ogl/pg/uow"
+	pfpguow "github.com/piprim/mmw/platform/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain"
 	"github.com/rotisserie/eris"
 )
 
 // SessionRepository is the PostgreSQL implementation of ports.SessionRepository.
 type SessionRepository struct {
-	uow *oglpguow.UnitOfWork
+	uow *pfpguow.UnitOfWork
 }
 
-func NewSessionRepository(uow *oglpguow.UnitOfWork) *SessionRepository {
+func NewSessionRepository(uow *pfpguow.UnitOfWork) *SessionRepository {
 	return &SessionRepository{uow: uow}
 }
 

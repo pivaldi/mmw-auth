@@ -6,9 +6,8 @@ import (
 	"embed"
 	"io/fs"
 
-	oglconfig "github.com/ovya/ogl/config"
-	oglpfconfig "github.com/ovya/ogl/platform/config"
-	oglslog "github.com/ovya/ogl/slog"
+	pfconfig "github.com/piprim/mmw/platform/config"
+	pfslog "github.com/piprim/mmw/platform/slog"
 	"github.com/rotisserie/eris"
 )
 
@@ -26,12 +25,12 @@ type JWT struct {
 }
 
 type Config struct {
-	oglpfconfig.Base
-	Database *oglpfconfig.Database `mapstructure:"database"`
-	AppName  string                `env:"APP_NAME"`
-	Server   *oglpfconfig.Server   `mapstructure:"server"`
-	LogLevel oglslog.LogLevel      `mapstructure:"log-level"`
-	JWT      JWT                   `json:"-"`
+	pfconfig.Base
+	Database *pfconfig.Database `mapstructure:"database"`
+	AppName  string             `env:"APP_NAME"`
+	Server   *pfconfig.Server   `mapstructure:"server"`
+	LogLevel pfslog.LogLevel    `mapstructure:"log-level"`
+	JWT      JWT                `json:"-"`
 }
 
 var conf *Config
@@ -49,7 +48,7 @@ func Load(ctx context.Context, envprefix string) (*Config, error) {
 	conf := new(Config)
 
 	configFS := getConfigFS()
-	err := oglconfig.NewContext(ctx, configFS, envprefix).Fill(conf)
+	err := pfconfig.NewContext(ctx, configFS, envprefix).Fill(conf)
 	if err != nil {
 		return nil, eris.Wrap(err, "error filling config")
 	}

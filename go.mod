@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/ovya/ogl v0.0.0-20260324224052-968c2f821ca3
+	github.com/piprim/mmw/platform v0.0.0
 	github.com/pivaldi/mmw-contracts v0.0.0-20260323180942-26dc4fc984be
 	github.com/rotisserie/eris v0.5.4
 	github.com/stretchr/testify v1.11.1

@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	ogloutbox "github.com/ovya/ogl/db/outbox"
-	ogluow "github.com/ovya/ogl/pg/uow"
-	oglevents "github.com/ovya/ogl/platform/events"
-	oglserver "github.com/ovya/ogl/platform/server"
+	pfoutbox "github.com/piprim/mmw/platform/db/outbox"
+	pfuow "github.com/piprim/mmw/platform/pg/uow"
+	pfevents "github.com/piprim/mmw/platform/events"
+	pfserver "github.com/piprim/mmw/platform/server"
 	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/connect"
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
@@ -31,10 +31,10 @@ const (
 	ModuleName     = "Auth"
 )
 
-// Module implements oglcore.Module for the auth service.
+// Module implements pfcore.Module for the auth service.
 type Module struct {
-	relay       *ogloutbox.EventsRelay
-	server      *oglserver.HTTPServer
+	relay       *pfoutbox.EventsRelay
+	server      *pfserver.HTTPServer
 	logger      *slog.Logger
 	authService *application.AuthApplicationService
 }
@@ -42,7 +42,7 @@ type Module struct {
 // The infrastructure need to start the Auth App.
 type Infrastructure struct {
 	DBPool   *pgxpool.Pool
-	EventBus oglevents.SystemEventBus
+	EventBus pfevents.SystemEventBus
 	Logger   *slog.Logger
 }
 
@@ -53,7 +53,7 @@ func New(infra Infrastructure) (*Module, error) {
 		return nil, eris.Wrap(err, "app failed to load config")
 	}
 
-	uow := ogluow.New(infra.DBPool)
+	uow := pfuow.New(infra.DBPool)
 	userRepo := postgres.NewUserRepository(uow)
 	sessionRepo := postgres.NewSessionRepository(uow)
 	dispatcher := outboxevents.NewOutboxDispatcher(uow)
@@ -66,19 +66,19 @@ func New(infra Infrastructure) (*Module, error) {
 	mux.Handle(path, handler)
 
 	h2cHandler := h2c.NewHandler(mux, &http2.Server{})
-	httpInfra := oglserver.HTTPServerInfra{
+	httpInfra := pfserver.HTTPServerInfra{
 		Config:          cfg.Server,
 		Handler:         h2cHandler,
 		Logger:          infra.Logger,
-		HealthFns:       oglserver.HealthFns{"database": userRepo.Health},
+		HealthFns:       pfserver.HealthFns{"database": userRepo.Health},
 		LogPayloads:     true,
 		WithDebugRoutes: cfg.Environment.IsDev(),
 	}
 
-	server := oglserver.NewHTTPServer(httpInfra)
+	server := pfserver.NewHTTPServer(httpInfra)
 
 	return &Module{
-		relay:       ogloutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
+		relay:       pfoutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
 		server:      server,
 		logger:      infra.Logger,
 		authService: authService,

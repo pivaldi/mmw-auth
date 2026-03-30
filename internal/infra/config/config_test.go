@@ -8,9 +8,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	oglconfig "github.com/ovya/ogl/config"
-	oglpfconfig "github.com/ovya/ogl/platform/config"
-	oglslog "github.com/ovya/ogl/slog"
+	oglconfig "github.com/piprim/mmw/platform/config"
+	oglslog "github.com/piprim/mmw/platform/slog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,12 +17,12 @@ import (
 func TestDatabase_URL(t *testing.T) {
 	tests := []struct {
 		name     string
-		db       *oglpfconfig.Database
+		db       *oglconfig.Database
 		expected string
 	}{
 		{
 			name: "with user and password",
-			db: &oglpfconfig.Database{
+			db: &oglconfig.Database{
 				User:     "testuser",
 				Password: "testpass",
 				Host:     "localhost",
@@ -34,7 +33,7 @@ func TestDatabase_URL(t *testing.T) {
 		},
 		{
 			name: "with user only",
-			db: &oglpfconfig.Database{
+			db: &oglconfig.Database{
 				User:     "testuser",
 				Password: "",
 				Host:     "localhost",
@@ -45,7 +44,7 @@ func TestDatabase_URL(t *testing.T) {
 		},
 		{
 			name: "without credentials",
-			db: &oglpfconfig.Database{
+			db: &oglconfig.Database{
 				User:     "",
 				Password: "",
 				Host:     "localhost",
@@ -56,7 +55,7 @@ func TestDatabase_URL(t *testing.T) {
 		},
 		{
 			name: "with special characters in password",
-			db: &oglpfconfig.Database{
+			db: &oglconfig.Database{
 				User:     "user",
 				Password: "p@ss:word",
 				Host:     "db.example.com",
@@ -122,13 +121,13 @@ host = "test-host"
 	require.NotNil(t, config.Database)
 
 	// Verify config was loaded and merged
-	assert.Equal(t, oglpfconfig.Port(9090), config.Server.Port) // From testing.toml
+	assert.Equal(t, oglconfig.Port(9090), config.Server.Port) // From testing.toml
 	assert.Equal(t, oglconfig.EnvironmentTesting, config.Environment)
 
 	// Verify database config
 	assert.Equal(t, "rcv", config.Database.User)
 	assert.Equal(t, "test-host", config.Database.Host) // From testing.toml
-	assert.Equal(t, oglpfconfig.Port(5432), config.Database.Port)
+	assert.Equal(t, oglconfig.Port(5432), config.Database.Port)
 	assert.Equal(t, "testdb", config.Database.Name)
 
 	// Verify URL generation includes password
@@ -212,13 +211,13 @@ name = "defaultdb"
 
 	// Should use default config values
 	assert.Equal(t, "DefaultApp", config.AppName)
-	assert.Equal(t, oglpfconfig.Port(8080), config.Server.Port)
+	assert.Equal(t, oglconfig.Port(8080), config.Server.Port)
 	assert.Equal(t, oglconfig.EnvironmentProduction, config.Environment)
 }
 
 func TestConfig_GetAppEnv(t *testing.T) {
 	config := &Config{
-		Base: oglpfconfig.Base{Environment: oglconfig.EnvironmentStaging},
+		Base: oglconfig.Base{Environment: oglconfig.EnvironmentStaging},
 	}
 
 	env := config.GetAppEnv()
@@ -229,7 +228,7 @@ func TestConfig_GetAppEnv(t *testing.T) {
 func TestPort_String(t *testing.T) {
 	tests := []struct {
 		name     string
-		port     oglpfconfig.Port
+		port     oglconfig.Port
 		expected string
 	}{
 		{
@@ -270,14 +269,14 @@ func TestPort_String(t *testing.T) {
 func TestServer_URL(t *testing.T) {
 	tests := []struct {
 		name     string
-		server   oglpfconfig.Server
+		server   oglconfig.Server
 		path     string
 		queries  map[string]string
 		expected string
 	}{
 		{
 			name: "http with default port 80 - port omitted",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "http",
 				Host:   "example.com",
 				Port:   80,
@@ -288,7 +287,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "https with default port 443 - port omitted",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "https",
 				Host:   "example.com",
 				Port:   443,
@@ -299,7 +298,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "http with custom port 8080",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "http",
 				Host:   "localhost",
 				Port:   8080,
@@ -310,7 +309,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "https with custom port 8443",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "https",
 				Host:   "api.example.com",
 				Port:   8443,
@@ -321,7 +320,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "with single query parameter",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "https",
 				Host:   "example.com",
 				Port:   443,
@@ -334,7 +333,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "with multiple query parameters",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "http",
 				Host:   "localhost",
 				Port:   3000,
@@ -349,7 +348,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "empty path with queries",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "https",
 				Host:   "example.com",
 				Port:   443,
@@ -362,7 +361,7 @@ func TestServer_URL(t *testing.T) {
 		},
 		{
 			name: "special characters in query values",
-			server: oglpfconfig.Server{
+			server: oglconfig.Server{
 				Scheme: "https",
 				Host:   "api.example.com",
 				Port:   443,

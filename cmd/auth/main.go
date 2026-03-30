@@ -10,10 +10,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ovya/ogl/platform"
-	oglcore "github.com/ovya/ogl/platform/core"
-	oglevents "github.com/ovya/ogl/platform/events"
-	oglslog "github.com/ovya/ogl/slog"
+	"github.com/piprim/mmw/platform"
+	pfcore "github.com/piprim/mmw/platform/core"
+	pfevents "github.com/piprim/mmw/platform/events"
+	pfslog "github.com/piprim/mmw/platform/slog"
 	auth "github.com/pivaldi/mmw-auth"
 	authconfig "github.com/pivaldi/mmw-auth/internal/infra/config"
 	"github.com/rotisserie/eris"
@@ -49,7 +49,7 @@ func main() {
 		return
 	}
 
-	logger, err = oglslog.New(oglslog.HandlerText, authConf.LogLevel.SlogLevel())
+	logger, err = pfslog.New(pfslog.HandlerText, authConf.LogLevel.SlogLevel())
 	if err != nil {
 		logError("creating logger", err)
 
@@ -70,7 +70,7 @@ func main() {
 
 	defer rawBus.Close()
 	// Wrap the raw infrastructure in the Adapter.
-	systemBus := oglevents.NewWatermillBus(rawBus)
+	systemBus := pfevents.NewWatermillBus(rawBus)
 
 	// When extracted, you might swap Watermill's GoChannel for RabbitMQ here!
 	// systemBus := setupRabbitMQ()
@@ -96,7 +96,7 @@ func main() {
 	}
 
 	// notifLogger := logger.With("module", "notifications")
-	modules := []oglcore.Module{
+	modules := []pfcore.Module{
 		authApp,
 		// Use RabitMQ consummer instead
 		// notifications.Build(rawBus, notifLogger),
@@ -111,7 +111,7 @@ func main() {
 
 func logError(msg string, err error) {
 	exitCode = 1
-	l := slog.New(oglslog.StderrTxtHandler(slog.LevelDebug, nil))
+	l := slog.New(pfslog.StderrTxtHandler(slog.LevelDebug, nil))
 	l.Error(msg, "details", errFormater(err, true))
 }
 

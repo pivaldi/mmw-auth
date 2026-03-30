@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ovya/ogl/platform"
+	"github.com/piprim/mmw/platform"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
