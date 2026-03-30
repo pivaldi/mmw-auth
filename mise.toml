@@ -60,13 +60,26 @@ description = "Install/Update needed tools"
 run = "UPDATE=true scripts/common/install-tools.sh"
 
 [tasks.generate]
-description = "Generate code from protobuf definitions"
+depends = ["buf:generate"]
+description = "Generate code of this project"
+run = "true"
+
+[tasks."buf:generate"]
+description = "Generate the protocol buffer code"
 run = """
-  #!/usr/bin/env bash
+#!/usr/bin/env bash
   set -euo pipefail
+
+  cd {{config_root}} || exit 1
+  source scripts/common/libs/st.bash
+
+  st.quiet
+
+  st.doing 'Generating Proto'
   cd {{vars.CONTRACTS_DIR}}
-  buf generate --template buf.gen.auth.yaml
-  """
+  st.do buf generate --template buf.gen.auth.yaml
+  st.done
+"""
 
 [tasks.build]
 description = "Build the application binary"
