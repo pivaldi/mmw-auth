@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	pfpguow "github.com/piprim/mmw/platform/pg/uow"
+	pfpguow "github.com/piprim/mmw/pkg/platform/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain"
 	"github.com/rotisserie/eris"
 )

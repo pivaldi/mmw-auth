@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"os"
 
-	dbpgcli "github.com/piprim/mmw/platform/db/cli"
-	oglslog "github.com/piprim/mmw/platform/slog"
+	dbpgcli "github.com/piprim/mmw/pkg/platform/db/cli"
+	oglslog "github.com/piprim/mmw/pkg/platform/slog"
 
 	"github.com/rotisserie/eris"
 )

@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	pfdb "github.com/piprim/mmw/platform/db"
-	pfpguow "github.com/piprim/mmw/platform/pg/uow"
+	pfdb "github.com/piprim/mmw/pkg/platform/db"
+	pfpguow "github.com/piprim/mmw/pkg/platform/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	"github.com/rotisserie/eris"
 )

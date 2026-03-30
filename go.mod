@@ -7,9 +7,8 @@ require (
 	github.com/ThreeDotsLabs/watermill v1.5.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.1
 	github.com/ovya/ogl v0.0.0-20260324224052-968c2f821ca3
-	github.com/piprim/mmw/platform v0.0.0
 	github.com/pivaldi/mmw-contracts v0.0.0-20260323180942-26dc4fc984be
 	github.com/rotisserie/eris v0.5.4
 	github.com/stretchr/testify v1.11.1
@@ -39,6 +38,7 @@ require (
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
+	github.com/piprim/mmw v0.0.0-20260330215535-bc0f2aacc35b // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pressly/goose/v3 v3.0.0-00010101000000-000000000000 // indirect
