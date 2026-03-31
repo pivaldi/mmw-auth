@@ -1,14 +1,14 @@
-package user_test
+package domain_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
 )
 
 func TestNewLogin_valid(t *testing.T) {
-	l, err := user.NewLogin("alice")
+	l, err := domain.NewLogin("alice")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -18,21 +18,21 @@ func TestNewLogin_valid(t *testing.T) {
 }
 
 func TestNewLogin_empty(t *testing.T) {
-	_, err := user.NewLogin("")
+	_, err := domain.NewLogin("")
 	if err == nil {
 		t.Fatal("expected error for empty login")
 	}
 }
 
 func TestNewLogin_tooLong(t *testing.T) {
-	_, err := user.NewLogin(strings.Repeat("a", 201))
+	_, err := domain.NewLogin(strings.Repeat("a", 201))
 	if err == nil {
 		t.Fatal("expected error for login > 200 chars")
 	}
 }
 
 func TestNewPasswordHash_hashesInput(t *testing.T) {
-	ph, err := user.NewPasswordHash("secret123")
+	ph, err := domain.NewPasswordHash("secret123")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -45,22 +45,22 @@ func TestNewPasswordHash_hashesInput(t *testing.T) {
 }
 
 func TestPasswordHash_Verify_correct(t *testing.T) {
-	ph, _ := user.NewPasswordHash("secret123")
+	ph, _ := domain.NewPasswordHash("secret123")
 	if !ph.Verify("secret123") {
 		t.Error("expected Verify to return true for correct password")
 	}
 }
 
 func TestPasswordHash_Verify_wrong(t *testing.T) {
-	ph, _ := user.NewPasswordHash("secret123")
+	ph, _ := domain.NewPasswordHash("secret123")
 	if ph.Verify("wrong") {
 		t.Error("expected Verify to return false for wrong password")
 	}
 }
 
 func TestNewHashedPassword_restoresHash(t *testing.T) {
-	ph, _ := user.NewPasswordHash("secret123")
-	restored := user.NewHashedPassword(ph.String())
+	ph, _ := domain.NewPasswordHash("secret123")
+	restored := domain.NewHashedPassword(ph.String())
 	if !restored.Verify("secret123") {
 		t.Error("restored hash should verify original password")
 	}

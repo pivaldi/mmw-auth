@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
 )
@@ -43,7 +42,7 @@ func NewAuthService(
 
 // Register creates a new user account.
 func (s *AuthApplicationService) Register(ctx context.Context, login, password string) (uuid.UUID, error) {
-	l, err := user.NewLogin(login)
+	l, err := domain.NewLogin(login)
 	if err != nil {
 		return uuid.Nil, DomainErrorFor(err)
 	}
@@ -52,7 +51,7 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 	var userID uuid.UUID
 
 	err = s.uow.WithTransaction(ctx, func(ctx context.Context) error {
-		u, err := user.Create(id, l, password)
+		u, err := domain.Create(id, l, password)
 		if err != nil {
 			return DomainErrorFor(err)
 		}
@@ -75,9 +74,9 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 
 // Login authenticates a user and returns a JWT token and the user ID.
 func (s *AuthApplicationService) Login(ctx context.Context, login, password string) (string, uuid.UUID, error) {
-	l, err := user.NewLogin(login)
+	l, err := domain.NewLogin(login)
 	if err != nil {
-		return "", uuid.Nil, DomainErrorFor(user.ErrInvalidCredentials)
+		return "", uuid.Nil, DomainErrorFor(domain.ErrInvalidCredentials)
 	}
 
 	var token string
@@ -86,10 +85,10 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 	err = s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByLogin(ctx, l)
 		if err != nil {
-			return user.ErrInvalidCredentials
+			return domain.ErrInvalidCredentials
 		}
 		if !u.CheckPassword(password) {
-			return user.ErrInvalidCredentials
+			return domain.ErrInvalidCredentials
 		}
 
 		t, err := s.createJWT(u.ID())
@@ -126,37 +125,37 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
 	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, user.ErrInvalidToken
+			return nil, domain.ErrInvalidToken
 		}
 
 		return s.jwtSecret, nil
 	})
 	if err != nil || !parsed.Valid {
-		return uuid.Nil, DomainErrorFor(user.ErrInvalidToken)
+		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
 	}
 
 	claims, ok := parsed.Claims.(jwt.MapClaims)
 	if !ok {
-		return uuid.Nil, DomainErrorFor(user.ErrInvalidToken)
+		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
 	}
 
 	userIDStr, ok := claims["user_id"].(string)
 	if !ok {
-		return uuid.Nil, DomainErrorFor(user.ErrInvalidToken)
+		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return uuid.Nil, DomainErrorFor(user.ErrInvalidToken)
+		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
 	}
 
 	sess, err := s.sessionRepo.FindByToken(ctx, tokenString)
 	if err != nil || sess == nil {
-		return uuid.Nil, DomainErrorFor(user.ErrInvalidToken)
+		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
 	}
 
 	if sess.UserID() != userID {
-		return uuid.Nil, DomainErrorFor(user.ErrInvalidToken)
+		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
 	}
 
 	return userID, nil
@@ -166,12 +165,12 @@ func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString 
 func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defauth.User, error) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, DomainErrorFor(user.ErrUserNotFound)
+		return nil, DomainErrorFor(domain.ErrUserNotFound)
 	}
 
 	u, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
-		return nil, DomainErrorFor(user.ErrUserNotFound)
+		return nil, DomainErrorFor(domain.ErrUserNotFound)
 	}
 
 	return &defauth.User{Id: u.ID().String(), Login: u.Login().String()}, nil
@@ -186,7 +185,7 @@ func (s *AuthApplicationService) ChangePassword(
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
-			return user.ErrUserNotFound
+			return domain.ErrUserNotFound
 		}
 		if err := u.ChangePassword(oldPassword, newPassword); err != nil {
 			return DomainErrorFor(err)
@@ -213,7 +212,7 @@ func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUI
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
-			return user.ErrUserNotFound
+			return domain.ErrUserNotFound
 		}
 		u.Delete()
 		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {

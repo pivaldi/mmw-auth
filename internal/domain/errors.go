@@ -1,5 +1,5 @@
 // Package user defines the auth bounded context's user aggregate and value objects.
-package user
+package domain
 
 import "errors"
 

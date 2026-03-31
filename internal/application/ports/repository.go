@@ -5,19 +5,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
 )
 
 // UserRepository defines persistence operations for the User aggregate.
 type UserRepository interface {
 	// Save persists a new user.
-	Save(ctx context.Context, u *user.User) error
+	Save(ctx context.Context, u *domain.User) error
 	// FindByLogin retrieves a user by login.
-	FindByLogin(ctx context.Context, login user.Login) (*user.User, error)
+	FindByLogin(ctx context.Context, login domain.Login) (*domain.User, error)
 	// FindByID retrieves a user by its UUID.
-	FindByID(ctx context.Context, id uuid.UUID) (*user.User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	// Update persists changes to an existing user.
-	Update(ctx context.Context, u *user.User) error
+	Update(ctx context.Context, u *domain.User) error
 	// Delete removes a user by ID.
 	Delete(ctx context.Context, id uuid.UUID) error
 	// Health returns a liveness indicator for the underlying store.
@@ -43,5 +42,5 @@ type UnitOfWork interface {
 // with the domain record that emitted them.
 type EventDispatcher interface {
 	// Dispatch persists domain events to the outbox.
-	Dispatch(ctx context.Context, events []user.DomainEvent) error
+	Dispatch(ctx context.Context, events []domain.DomainEvent) error
 }

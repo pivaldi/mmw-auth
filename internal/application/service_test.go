@@ -10,33 +10,32 @@ import (
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
 )
 
 // --- Mock repos ---
 
 type mockUserRepo struct {
-	saved     *user.User
-	byLogin   map[string]*user.User
-	byID      map[uuid.UUID]*user.User
-	updated   *user.User
+	saved     *domain.User
+	byLogin   map[string]*domain.User
+	byID      map[uuid.UUID]*domain.User
+	updated   *domain.User
 	deletedID uuid.UUID
 }
 
-func (m *mockUserRepo) Save(_ context.Context, u *user.User) error {
+func (m *mockUserRepo) Save(_ context.Context, u *domain.User) error {
 	m.saved = u
 	if m.byLogin == nil {
-		m.byLogin = make(map[string]*user.User)
+		m.byLogin = make(map[string]*domain.User)
 	}
 	if m.byID == nil {
-		m.byID = make(map[uuid.UUID]*user.User)
+		m.byID = make(map[uuid.UUID]*domain.User)
 	}
 	m.byLogin[u.Login().String()] = u
 	m.byID[u.ID()] = u
 	return nil
 }
 
-func (m *mockUserRepo) FindByLogin(_ context.Context, login user.Login) (*user.User, error) {
+func (m *mockUserRepo) FindByLogin(_ context.Context, login domain.Login) (*domain.User, error) {
 	u, ok := m.byLogin[login.String()]
 	if !ok {
 		return nil, errors.New("not found")
@@ -44,16 +43,16 @@ func (m *mockUserRepo) FindByLogin(_ context.Context, login user.Login) (*user.U
 	return u, nil
 }
 
-func (m *mockUserRepo) FindByID(_ context.Context, id uuid.UUID) (*user.User, error) {
+func (m *mockUserRepo) FindByID(_ context.Context, id uuid.UUID) (*domain.User, error) {
 	u, ok := m.byID[id]
 	if !ok {
 		return nil, errors.New("not found")
 	}
 	return u, nil
 }
-func (m *mockUserRepo) Update(_ context.Context, u *user.User) error { m.updated = u; return nil }
-func (m *mockUserRepo) Delete(_ context.Context, id uuid.UUID) error { m.deletedID = id; return nil }
-func (m *mockUserRepo) Health(_ context.Context) (any, error)        { return nil, nil }
+func (m *mockUserRepo) Update(_ context.Context, u *domain.User) error { m.updated = u; return nil }
+func (m *mockUserRepo) Delete(_ context.Context, id uuid.UUID) error   { m.deletedID = id; return nil }
+func (m *mockUserRepo) Health(_ context.Context) (any, error)          { return nil, nil }
 
 type mockSessionRepo struct {
 	saved   *domain.Session
@@ -77,9 +76,9 @@ func (m *mockSessionRepo) FindByToken(_ context.Context, token string) (*domain.
 	return s, nil
 }
 
-type mockDispatcher struct{ dispatched []user.DomainEvent }
+type mockDispatcher struct{ dispatched []domain.DomainEvent }
 
-func (m *mockDispatcher) Dispatch(_ context.Context, events []user.DomainEvent) error {
+func (m *mockDispatcher) Dispatch(_ context.Context, events []domain.DomainEvent) error {
 	m.dispatched = append(m.dispatched, events...)
 	return nil
 }

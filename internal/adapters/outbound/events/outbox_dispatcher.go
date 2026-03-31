@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	pfpguow "github.com/piprim/mmw/pkg/platform/pg/uow"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
 	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -26,7 +26,7 @@ func NewOutboxDispatcher(uow *pfpguow.UnitOfWork) *OutboxDispatcher {
 }
 
 // Dispatch inserts all events into auth.event in a single batch.
-func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []user.DomainEvent) error {
+func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []domain.DomainEvent) error {
 	if len(events) == 0 {
 		return nil
 	}
@@ -63,8 +63,8 @@ func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []user.DomainEve
 // All other event types fall back to encoding/json via their MarshalJSON methods.
 // If a new event type gains a proto-aware consumer, add a branch here — the
 // fallback will silently produce wrong field names if left unhandled.
-func marshalEvent(evt user.DomainEvent) ([]byte, error) {
-	if e, ok := evt.(user.UserDeleted); ok {
+func marshalEvent(evt domain.DomainEvent) ([]byte, error) {
+	if e, ok := evt.(domain.UserDeleted); ok {
 		pbEvt := &authdef.UserDeletedEvent{
 			UserId:    e.AggregateID(),
 			DeletedAt: timestamppb.New(e.OccurredAt()),

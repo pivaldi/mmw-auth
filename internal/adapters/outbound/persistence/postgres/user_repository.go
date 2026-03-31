@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	pfdb "github.com/piprim/mmw/pkg/platform/db"
 	pfpguow "github.com/piprim/mmw/pkg/platform/pg/uow"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
 	"github.com/rotisserie/eris"
 )
 
@@ -22,7 +22,7 @@ func NewUserRepository(uow *pfpguow.UnitOfWork) *UserRepository {
 	return &UserRepository{uow: uow}
 }
 
-func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
+func (r *UserRepository) Save(ctx context.Context, u *domain.User) error {
 	exec := r.uow.Executor(ctx)
 	_, err := exec.Exec(ctx,
 		`INSERT INTO auth.users (id, login, password_hash, created_at, updated_at)
@@ -32,7 +32,7 @@ func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return user.ErrUserAlreadyExists
+			return domain.ErrUserAlreadyExists
 		}
 
 		return eris.Wrap(err, "save user")
@@ -41,7 +41,7 @@ func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
 	return nil
 }
 
-func (r *UserRepository) FindByLogin(ctx context.Context, login user.Login) (*user.User, error) {
+func (r *UserRepository) FindByLogin(ctx context.Context, login domain.Login) (*domain.User, error) {
 	exec := r.uow.Executor(ctx)
 	rows, err := exec.Query(ctx,
 		`SELECT id, login, password_hash, created_at, updated_at FROM auth.users WHERE login = $1`,
@@ -51,7 +51,7 @@ func (r *UserRepository) FindByLogin(ctx context.Context, login user.Login) (*us
 		return nil, eris.Wrap(err, "query user by login")
 	}
 
-	snap, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[user.UserSnapshot])
+	snap, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domain.UserSnapshot])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, eris.New("user not found")
@@ -60,10 +60,10 @@ func (r *UserRepository) FindByLogin(ctx context.Context, login user.Login) (*us
 		return nil, eris.Wrap(err, "collect user row")
 	}
 
-	return user.ReconstructUser(&snap), nil
+	return domain.ReconstructUser(&snap), nil
 }
 
-func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
+func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	exec := r.uow.Executor(ctx)
 	rows, err := exec.Query(ctx,
 		`SELECT id, login, password_hash, created_at, updated_at FROM auth.users WHERE id = $1`,
@@ -73,7 +73,7 @@ func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*user.User
 		return nil, eris.Wrap(err, "query user by id")
 	}
 
-	snap, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[user.UserSnapshot])
+	snap, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[domain.UserSnapshot])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, eris.New("user not found")
@@ -82,10 +82,10 @@ func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*user.User
 		return nil, eris.Wrap(err, "collect user row")
 	}
 
-	return user.ReconstructUser(&snap), nil
+	return domain.ReconstructUser(&snap), nil
 }
 
-func (r *UserRepository) Update(ctx context.Context, u *user.User) error {
+func (r *UserRepository) Update(ctx context.Context, u *domain.User) error {
 	exec := r.uow.Executor(ctx)
 	_, err := exec.Exec(ctx,
 		`UPDATE auth.users SET login = @login, password_hash = @password_hash, updated_at = @updated_at WHERE id = @id`,

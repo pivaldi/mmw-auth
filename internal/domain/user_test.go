@@ -1,4 +1,4 @@
-package user_test
+package domain_test
 
 import (
 	"encoding/json"
@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
 )
 
-func mustLogin(t *testing.T, s string) user.Login {
+func mustLogin(t *testing.T, s string) domain.Login {
 	t.Helper()
-	l, err := user.NewLogin(s)
+	l, err := domain.NewLogin(s)
 	if err != nil {
 		t.Fatalf("NewLogin(%q): %v", s, err)
 	}
@@ -21,7 +21,7 @@ func mustLogin(t *testing.T, s string) user.Login {
 
 func TestCreate_emitsUserRegistered(t *testing.T) {
 	id := uuid.New()
-	u, err := user.Create(id, mustLogin(t, "alice"), "password123")
+	u, err := domain.Create(id, mustLogin(t, "alice"), "password123")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -29,8 +29,8 @@ func TestCreate_emitsUserRegistered(t *testing.T) {
 	if len(events) != 1 {
 		t.Fatalf("expected 1 event, got %d", len(events))
 	}
-	if events[0].EventType() != "auth.user.registered" {
-		t.Errorf("expected auth.user.registered, got %s", events[0].EventType())
+	if events[0].EventType() != "auth.domain.registered" {
+		t.Errorf("expected auth.domain.registered, got %s", events[0].EventType())
 	}
 	if events[0].AggregateID() != id.String() {
 		t.Errorf("expected aggregateID %s, got %s", id.String(), events[0].AggregateID())
@@ -39,7 +39,7 @@ func TestCreate_emitsUserRegistered(t *testing.T) {
 
 func TestCreate_setsFieldsCorrectly(t *testing.T) {
 	id := uuid.New()
-	u, err := user.Create(id, mustLogin(t, "bob"), "secret")
+	u, err := domain.Create(id, mustLogin(t, "bob"), "secret")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -52,40 +52,40 @@ func TestCreate_setsFieldsCorrectly(t *testing.T) {
 }
 
 func TestCreate_emptyPasswordFails(t *testing.T) {
-	_, err := user.Create(uuid.New(), mustLogin(t, "alice"), "")
+	_, err := domain.Create(uuid.New(), mustLogin(t, "alice"), "")
 	if err == nil {
 		t.Fatal("expected error for empty password")
 	}
 }
 
 func TestCheckPassword_correct(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "mypassword")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "mypassword")
 	if !u.CheckPassword("mypassword") {
 		t.Error("expected CheckPassword to return true")
 	}
 }
 
 func TestCheckPassword_wrong(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "mypassword")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "mypassword")
 	if u.CheckPassword("wrongpassword") {
 		t.Error("expected CheckPassword to return false")
 	}
 }
 
 func TestChangePassword_emitsPasswordChanged(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "oldpass")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "oldpass")
 	u.ClearEvents()
 	if err := u.ChangePassword("oldpass", "newpass"); err != nil {
 		t.Fatalf("ChangePassword: %v", err)
 	}
 	events := u.ClearEvents()
-	if len(events) != 1 || events[0].EventType() != "auth.user.password_changed" {
+	if len(events) != 1 || events[0].EventType() != "auth.domain.password_changed" {
 		t.Errorf("expected password_changed event, got %v", events)
 	}
 }
 
 func TestChangePassword_wrongOldPassword(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "oldpass")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "oldpass")
 	u.ClearEvents()
 	if err := u.ChangePassword("wrongold", "newpass"); err == nil {
 		t.Fatal("expected error for wrong old password")
@@ -96,7 +96,7 @@ func TestChangePassword_wrongOldPassword(t *testing.T) {
 }
 
 func TestChangePassword_emptyNewPasswordFails(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "oldpass")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "oldpass")
 	u.ClearEvents()
 	if err := u.ChangePassword("oldpass", ""); err == nil {
 		t.Fatal("expected error for empty new password")
@@ -107,28 +107,28 @@ func TestChangePassword_emptyNewPasswordFails(t *testing.T) {
 }
 
 func TestMarkLoggedIn_emitsUserLoggedIn(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "pass")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "pass")
 	u.ClearEvents()
 	u.MarkLoggedIn()
 	events := u.ClearEvents()
-	if len(events) != 1 || events[0].EventType() != "auth.user.logged_in" {
+	if len(events) != 1 || events[0].EventType() != "auth.domain.logged_in" {
 		t.Errorf("expected logged_in event, got %v", events)
 	}
 }
 
 func TestDelete_emitsUserDeleted(t *testing.T) {
-	u, _ := user.Create(uuid.New(), mustLogin(t, "alice"), "pass")
+	u, _ := domain.Create(uuid.New(), mustLogin(t, "alice"), "pass")
 	u.ClearEvents()
 	u.Delete()
 	events := u.ClearEvents()
-	if len(events) != 1 || events[0].EventType() != "auth.user.deleted" {
+	if len(events) != 1 || events[0].EventType() != "auth.domain.deleted" {
 		t.Errorf("expected deleted event, got %v", events)
 	}
 }
 
 func TestUserRegistered_MarshalJSON(t *testing.T) {
 	id := uuid.New()
-	u, _ := user.Create(id, mustLogin(t, "alice"), "password123")
+	u, _ := domain.Create(id, mustLogin(t, "alice"), "password123")
 	events := u.ClearEvents()
 	if len(events) != 1 {
 		t.Fatalf("expected 1 event")
@@ -149,16 +149,16 @@ func TestUserRegistered_MarshalJSON(t *testing.T) {
 
 func TestReconstructUser_noEvents(t *testing.T) {
 	id := uuid.New()
-	ph, _ := user.NewPasswordHash("secret")
+	ph, _ := domain.NewPasswordHash("secret")
 	now := time.Now()
-	snap := user.UserSnapshot{
+	snap := domain.UserSnapshot{
 		ID:           id,
 		Login:        "alice",
 		PasswordHash: ph.String(),
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
-	u := user.ReconstructUser(&snap)
+	u := domain.ReconstructUser(&snap)
 	if len(u.ClearEvents()) != 0 {
 		t.Error("ReconstructUser must not emit events")
 	}

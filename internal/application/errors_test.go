@@ -8,7 +8,7 @@ import (
 
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/application"
-	"github.com/pivaldi/mmw-auth/internal/domain/user"
+	"github.com/pivaldi/mmw-auth/internal/domain"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
 
@@ -19,27 +19,27 @@ func TestDomainErrorFor_KnownSentinels(t *testing.T) {
 		wantCode platform.ErrorCode
 	}{
 		{
-			"ErrInvalidLogin", user.ErrInvalidLogin,
+			"ErrInvalidLogin", domain.ErrInvalidLogin,
 			platform.ErrorCode(defauth.ErrorCodeInvalidLogin),
 		},
 		{
-			"ErrInvalidPassword", user.ErrInvalidPassword,
+			"ErrInvalidPassword", domain.ErrInvalidPassword,
 			platform.ErrorCode(defauth.ErrorCodeInvalidPassword),
 		},
 		{
-			"ErrInvalidCredentials", user.ErrInvalidCredentials,
+			"ErrInvalidCredentials", domain.ErrInvalidCredentials,
 			platform.ErrorCode(defauth.ErrorCodeInvalidCredentials),
 		},
 		{
-			"ErrInvalidToken", user.ErrInvalidToken,
+			"ErrInvalidToken", domain.ErrInvalidToken,
 			platform.ErrorCode(defauth.ErrorCodeInvalidToken),
 		},
 		{
-			"ErrUserNotFound", user.ErrUserNotFound,
+			"ErrUserNotFound", domain.ErrUserNotFound,
 			platform.ErrorCode(defauth.ErrorCodeUserNotFound),
 		},
 		{
-			"ErrUserAlreadyExists", user.ErrUserAlreadyExists,
+			"ErrUserAlreadyExists", domain.ErrUserAlreadyExists,
 			platform.ErrorCode(defauth.ErrorCodeUserAlreadyExists),
 		},
 	}
@@ -65,7 +65,7 @@ func TestDomainErrorFor_KnownSentinels(t *testing.T) {
 }
 
 func TestDomainErrorFor_WrappedSentinel(t *testing.T) {
-	wrapped := fmt.Errorf("context: %w", user.ErrInvalidCredentials)
+	wrapped := fmt.Errorf("context: %w", domain.ErrInvalidCredentials)
 
 	result := application.DomainErrorFor(wrapped)
 
