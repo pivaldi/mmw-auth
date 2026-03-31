@@ -125,7 +125,7 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
 	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, domain.ErrInvalidToken
+			return nil, DomainErrorFor(domain.ErrInvalidToken)
 		}
 
 		return s.jwtSecret, nil
@@ -185,7 +185,7 @@ func (s *AuthApplicationService) ChangePassword(
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
-			return domain.ErrUserNotFound
+			return DomainErrorFor(domain.ErrUserNotFound)
 		}
 		if err := u.ChangePassword(oldPassword, newPassword); err != nil {
 			return DomainErrorFor(err)
@@ -212,7 +212,7 @@ func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUI
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
-			return domain.ErrUserNotFound
+			return DomainErrorFor(domain.ErrUserNotFound)
 		}
 		u.Delete()
 		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {

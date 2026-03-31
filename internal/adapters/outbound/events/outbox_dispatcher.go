@@ -35,11 +35,16 @@ func (d *OutboxDispatcher) Dispatch(ctx context.Context, events []domain.DomainE
 	const query = `INSERT INTO auth.event (event_type, payload, occurred_at) VALUES ($1, $2::jsonb, $3)`
 
 	for _, evt := range events {
+		topic, ok := domainTopics[evt.EventType()]
+		if !ok {
+			return eris.Errorf("no routing key for domain event type %q", evt.EventType())
+		}
+
 		payload, err := marshalEvent(evt)
 		if err != nil {
 			return eris.Wrapf(err, "marshal event %s", evt.EventType())
 		}
-		batch.Queue(query, evt.EventType(), string(payload), evt.OccurredAt())
+		batch.Queue(query, topic, string(payload), evt.OccurredAt())
 	}
 
 	exec := d.uow.Executor(ctx)

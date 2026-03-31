@@ -29,8 +29,8 @@ func TestCreate_emitsUserRegistered(t *testing.T) {
 	if len(events) != 1 {
 		t.Fatalf("expected 1 event, got %d", len(events))
 	}
-	if events[0].EventType() != "auth.domain.registered" {
-		t.Errorf("expected auth.domain.registered, got %s", events[0].EventType())
+	if events[0].EventType() != domain.EventTypeUserRegistered {
+		t.Errorf("expected %s, got %s", domain.EventTypeUserRegistered, events[0].EventType())
 	}
 	if events[0].AggregateID() != id.String() {
 		t.Errorf("expected aggregateID %s, got %s", id.String(), events[0].AggregateID())
@@ -79,8 +79,8 @@ func TestChangePassword_emitsPasswordChanged(t *testing.T) {
 		t.Fatalf("ChangePassword: %v", err)
 	}
 	events := u.ClearEvents()
-	if len(events) != 1 || events[0].EventType() != "auth.domain.password_changed" {
-		t.Errorf("expected password_changed event, got %v", events)
+	if len(events) != 1 || events[0].EventType() != domain.EventTypePasswordChanged {
+		t.Errorf("expected %s event, got %v", domain.EventTypePasswordChanged, events)
 	}
 }
 
@@ -111,8 +111,8 @@ func TestMarkLoggedIn_emitsUserLoggedIn(t *testing.T) {
 	u.ClearEvents()
 	u.MarkLoggedIn()
 	events := u.ClearEvents()
-	if len(events) != 1 || events[0].EventType() != "auth.domain.logged_in" {
-		t.Errorf("expected logged_in event, got %v", events)
+	if len(events) != 1 || events[0].EventType() != domain.EventTypeUserLoggedIn {
+		t.Errorf("expected %s event, got %v", domain.EventTypeUserLoggedIn, events)
 	}
 }
 
@@ -121,8 +121,8 @@ func TestDelete_emitsUserDeleted(t *testing.T) {
 	u.ClearEvents()
 	u.Delete()
 	events := u.ClearEvents()
-	if len(events) != 1 || events[0].EventType() != "auth.domain.deleted" {
-		t.Errorf("expected deleted event, got %v", events)
+	if len(events) != 1 || events[0].EventType() != domain.EventTypeUserDeleted {
+		t.Errorf("expected %s event, got %v", domain.EventTypeUserDeleted, events)
 	}
 }
 

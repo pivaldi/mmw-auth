@@ -5,12 +5,12 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
-	"github.com/piprim/mmw/pkg/platform"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	commonv1 "github.com/pivaldi/mmw-contracts/gen/go/common/v1"
+	"github.com/piprim/mmw/pkg/platform"
 )
 
-// authConnectCodeMap maps auth domain error codes to Connect status codes.
+// authConnectCodeMap maps proto error codes (from contracts) to Connect status codes.
 //
 //nolint:gochecknoglobals // package-level lookup table, not mutable state
 var authConnectCodeMap = map[platform.ErrorCode]connect.Code{

@@ -4,13 +4,16 @@ package application
 import (
 	"errors"
 
+	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
 
 // DomainErrorFor translates a domain sentinel error into a *platform.DomainError
-// so the inbound adapter can map it to a typed Connect error detail.
+// using the error codes from contracts (definitions/auth). This is the application
+// layer's responsibility: binding domain errors to the shared wire protocol so that
+// callers — including other modules communicating in-process — receive a typed error
+// that carries no domain-specific knowledge.
 // Non-domain errors (infra, unexpected) are returned unchanged.
 func DomainErrorFor(err error) error {
 	switch {

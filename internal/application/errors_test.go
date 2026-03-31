@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
+	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
 
 func TestDomainErrorFor_KnownSentinels(t *testing.T) {
@@ -18,30 +18,12 @@ func TestDomainErrorFor_KnownSentinels(t *testing.T) {
 		input    error
 		wantCode platform.ErrorCode
 	}{
-		{
-			"ErrInvalidLogin", domain.ErrInvalidLogin,
-			platform.ErrorCode(defauth.ErrorCodeInvalidLogin),
-		},
-		{
-			"ErrInvalidPassword", domain.ErrInvalidPassword,
-			platform.ErrorCode(defauth.ErrorCodeInvalidPassword),
-		},
-		{
-			"ErrInvalidCredentials", domain.ErrInvalidCredentials,
-			platform.ErrorCode(defauth.ErrorCodeInvalidCredentials),
-		},
-		{
-			"ErrInvalidToken", domain.ErrInvalidToken,
-			platform.ErrorCode(defauth.ErrorCodeInvalidToken),
-		},
-		{
-			"ErrUserNotFound", domain.ErrUserNotFound,
-			platform.ErrorCode(defauth.ErrorCodeUserNotFound),
-		},
-		{
-			"ErrUserAlreadyExists", domain.ErrUserAlreadyExists,
-			platform.ErrorCode(defauth.ErrorCodeUserAlreadyExists),
-		},
+		{"ErrInvalidLogin", domain.ErrInvalidLogin, platform.ErrorCode(defauth.ErrorCodeInvalidLogin)},
+		{"ErrInvalidPassword", domain.ErrInvalidPassword, platform.ErrorCode(defauth.ErrorCodeInvalidPassword)},
+		{"ErrInvalidCredentials", domain.ErrInvalidCredentials, platform.ErrorCode(defauth.ErrorCodeInvalidCredentials)},
+		{"ErrInvalidToken", domain.ErrInvalidToken, platform.ErrorCode(defauth.ErrorCodeInvalidToken)},
+		{"ErrUserNotFound", domain.ErrUserNotFound, platform.ErrorCode(defauth.ErrorCodeUserNotFound)},
+		{"ErrUserAlreadyExists", domain.ErrUserAlreadyExists, platform.ErrorCode(defauth.ErrorCodeUserAlreadyExists)},
 	}
 
 	for _, tc := range cases {

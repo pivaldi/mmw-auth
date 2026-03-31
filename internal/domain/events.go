@@ -4,9 +4,16 @@ import (
 	"encoding/json"
 	"time"
 
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
-
 	"github.com/rotisserie/eris"
+)
+
+// Event type constants — semantic identifiers owned by the domain.
+// Adapters are responsible for mapping these to transport-layer routing keys.
+const (
+	EventTypeUserRegistered  = "auth.user.registered"
+	EventTypeUserDeleted     = "auth.user.deleted"
+	EventTypePasswordChanged = "auth.user.password_changed"
+	EventTypeUserLoggedIn    = "auth.user.logged_in"
 )
 
 // DomainEvent is the interface all auth domain events implement.
@@ -26,7 +33,7 @@ type UserRegistered struct {
 	Login       string
 }
 
-func (UserRegistered) EventType() string       { return authdef.TopicUserRegistered }
+func (UserRegistered) EventType() string       { return EventTypeUserRegistered }
 func (e UserRegistered) AggregateID() string   { return e.aggregateID }
 func (e UserRegistered) OccurredAt() time.Time { return e.occurredAt }
 
@@ -46,7 +53,7 @@ type UserDeleted struct {
 	occurredAt  time.Time
 }
 
-func (UserDeleted) EventType() string       { return authdef.TopicUserDeleted }
+func (UserDeleted) EventType() string       { return EventTypeUserDeleted }
 func (e UserDeleted) AggregateID() string   { return e.aggregateID }
 func (e UserDeleted) OccurredAt() time.Time { return e.occurredAt }
 
@@ -69,7 +76,7 @@ type PasswordChanged struct {
 	occurredAt  time.Time
 }
 
-func (PasswordChanged) EventType() string       { return authdef.TopicPasswordChanged }
+func (PasswordChanged) EventType() string       { return EventTypePasswordChanged }
 func (e PasswordChanged) AggregateID() string   { return e.aggregateID }
 func (e PasswordChanged) OccurredAt() time.Time { return e.occurredAt }
 
@@ -88,7 +95,7 @@ type UserLoggedIn struct {
 	occurredAt  time.Time
 }
 
-func (UserLoggedIn) EventType() string       { return authdef.TopicUserLoggedIn }
+func (UserLoggedIn) EventType() string       { return EventTypeUserLoggedIn }
 func (e UserLoggedIn) AggregateID() string   { return e.aggregateID }
 func (e UserLoggedIn) OccurredAt() time.Time { return e.occurredAt }
 
