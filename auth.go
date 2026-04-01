@@ -3,11 +3,9 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	pfoutbox "github.com/piprim/mmw/pkg/platform/db/outbox"
 	pfevents "github.com/piprim/mmw/pkg/platform/events"
@@ -18,7 +16,6 @@ import (
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/infra/config"
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
 	"golang.org/x/net/http2"
@@ -33,10 +30,15 @@ const (
 
 // Module implements pfcore.Module for the auth service.
 type Module struct {
-	relay       *pfoutbox.EventsRelay
-	server      *pfserver.HTTPServer
-	logger      *slog.Logger
-	authService *application.AuthApplicationService
+	relay   *pfoutbox.EventsRelay
+	server  *pfserver.HTTPServer
+	logger  *slog.Logger
+	service *application.AuthApplicationService
+}
+
+// Service return the todo application service
+func (m *Module) Service() *application.AuthApplicationService {
+	return m.service
 }
 
 // The infrastructure need to start the Auth App.
@@ -78,10 +80,10 @@ func New(infra Infrastructure) (*Module, error) {
 	server := pfserver.NewHTTPServer(httpInfra)
 
 	return &Module{
-		relay:       pfoutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
-		server:      server,
-		logger:      infra.Logger,
-		authService: authService,
+		relay:   pfoutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
+		server:  server,
+		logger:  infra.Logger,
+		service: authService,
 	}, nil
 }
 
@@ -100,28 +102,4 @@ func (m *Module) Start(ctx context.Context) error {
 	})
 
 	return eris.Wrapf(g.Wait(), "%s failure", ModuleName)
-}
-
-// Ensure Module implements defauth.AuthService so it can be passed directly to
-// defauth.NewInprocClient without an intermediate wrapper.
-var _ authdef.AuthService = (*Module)(nil)
-
-// GetUser delegates to the internal auth application service.
-func (m *Module) GetUser(ctx context.Context, id string) (*authdef.User, error) {
-	u, err := m.authService.GetUser(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("getting user: %w", err)
-	}
-
-	return u, nil
-}
-
-// ValidateToken delegates to the internal auth application service.
-func (m *Module) ValidateToken(ctx context.Context, token string) (uuid.UUID, error) {
-	id, err := m.authService.ValidateToken(ctx, token)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("validating token: %w", err)
-	}
-
-	return id, nil
 }

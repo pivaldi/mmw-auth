@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
+	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
 )
 
@@ -22,6 +22,9 @@ type AuthApplicationService struct {
 	dispatcher  ports.EventDispatcher
 	jwtSecret   []byte
 }
+
+// Ensure AuthApplicationService satisfies the defauth.AuthService contract.
+var _ authdef.AuthService = (*AuthApplicationService)(nil)
 
 // NewAuthService creates an AuthApplicationService with all required dependencies.
 func NewAuthService(
@@ -162,7 +165,7 @@ func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString 
 }
 
 // GetUser retrieves a user by UUID for cross-service in-process access.
-func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defauth.User, error) {
+func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*authdef.User, error) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, DomainErrorFor(domain.ErrUserNotFound)
@@ -173,7 +176,7 @@ func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*defau
 		return nil, DomainErrorFor(domain.ErrUserNotFound)
 	}
 
-	return &defauth.User{Id: u.ID().String(), Login: u.Login().String()}, nil
+	return &authdef.User{Id: u.ID().String(), Login: u.Login().String()}, nil
 }
 
 // ChangePassword replaces the user's password after verifying the old one.
@@ -247,12 +250,6 @@ func (s *AuthApplicationService) createJWT(userID uuid.UUID) (string, error) {
 	return token, nil
 }
 
-// Health return a simple database health check
-func (s *AuthApplicationService) Health(ctx context.Context) (any, error) {
-	count, err := s.userRepo.Health(ctx)
-	if err != nil {
-		return 0, DomainErrorFor(err)
-	}
-
-	return count, nil
-}
+// Ensure Module implements defauth.AuthService so it can be passed directly to
+// defauth.NewInprocClient without an intermediate wrapper.
+var _ authdef.AuthService = (*AuthApplicationService)(nil)
