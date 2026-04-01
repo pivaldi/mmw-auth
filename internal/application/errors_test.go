@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/domain"
+	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
 
 func TestDomainErrorFor_KnownSentinels(t *testing.T) {

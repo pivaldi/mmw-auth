@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
+	"github.com/piprim/mmw/pkg/platform"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	commonv1 "github.com/pivaldi/mmw-contracts/gen/go/common/v1"
-	"github.com/piprim/mmw/pkg/platform"
 )
 
 // authConnectCodeMap maps proto error codes (from contracts) to Connect status codes.

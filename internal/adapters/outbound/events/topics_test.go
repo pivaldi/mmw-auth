@@ -3,8 +3,8 @@ package events
 import (
 	"testing"
 
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-auth/internal/domain"
+	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
 
 func TestDomainTopics_AllEventTypesCovered(t *testing.T) {

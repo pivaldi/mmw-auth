@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/piprim/mmw/pkg/platform"
+	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
 
 func TestConnectErrorFrom_DomainError_MapsToCorrectCode(t *testing.T) {
