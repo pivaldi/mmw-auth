@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	pfdbmigrator "github.com/piprim/mmw/pkg/platform/db/migrator"
 	pfoutbox "github.com/piprim/mmw/pkg/platform/db/outbox"
 	pfevents "github.com/piprim/mmw/pkg/platform/events"
 	pfuow "github.com/piprim/mmw/pkg/platform/pg/uow"
@@ -16,6 +18,7 @@ import (
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/infra/config"
+	"github.com/pivaldi/mmw-auth/internal/infra/persistence/migrations"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
 	"golang.org/x/net/http2"
@@ -26,6 +29,7 @@ import (
 const (
 	relayTableName = "auth.event"
 	ModuleName     = "Auth"
+	PGSchema       = "auth"
 )
 
 // Module implements pfcore.Module for the auth service.
@@ -39,6 +43,28 @@ type Module struct {
 // Service return the todo application service
 func (m *Module) Service() *application.AuthApplicationService {
 	return m.service
+}
+
+// Handler returns the module's HTTP handler so tests can wrap it in
+// httptest.NewServer without starting a real server on a port.
+func (m *Module) Handler() http.Handler {
+	return m.server.Handler()
+}
+
+// Migrate runs all pending database migrations for the auth module.
+// Intended for use in tests and migration tooling.
+func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
+	db := stdlib.OpenDBFromPool(pool)
+	defer db.Close()
+
+	m, err := pfdbmigrator.New(db, migrations.FS, "scripts", PGSchema)
+	if err != nil {
+		return eris.Wrap(err, "failed to create migrator")
+	}
+
+	_, err = m.Up(ctx)
+
+	return eris.Wrap(err, "failed to migrate up")
 }
 
 // The infrastructure need to start the Auth App.

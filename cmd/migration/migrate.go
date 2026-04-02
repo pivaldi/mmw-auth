@@ -8,6 +8,7 @@ import (
 
 	dbpgcli "github.com/piprim/mmw/pkg/platform/db/cli"
 	oglslog "github.com/piprim/mmw/pkg/platform/slog"
+	auth "github.com/pivaldi/mmw-auth"
 
 	"github.com/rotisserie/eris"
 )
@@ -19,7 +20,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := dbpgcli.Migrate(conf.Database.URL(), "auth", migrationsFS); err != nil {
+	if err := dbpgcli.Migrate(conf.Database.URL(), auth.PGSchema, migrationsFS); err != nil {
 		logError("command failed", err)
 		os.Exit(1)
 	}
