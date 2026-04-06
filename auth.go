@@ -19,6 +19,7 @@ import (
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/infra/config"
 	"github.com/pivaldi/mmw-auth/internal/infra/persistence/migrations"
+	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
 	"golang.org/x/net/http2"
@@ -40,9 +41,10 @@ type Module struct {
 	service *application.AuthApplicationService
 }
 
-// Service return the todo application service
-func (m *Module) Service() *application.AuthApplicationService {
-	return m.service
+// Service returns the auth service as an authdef.AuthService, wrapped in a
+// ContractAdapter so callers receive the proto-typed contract interface.
+func (m *Module) Service() authdef.AuthService {
+	return application.NewContractAdapter(m.service)
 }
 
 // Handler returns the module's HTTP handler so tests can wrap it in

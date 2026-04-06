@@ -1,0 +1,77 @@
+package application
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
+	authv1 "github.com/pivaldi/mmw-contracts/gen/go/auth/v1"
+	"github.com/rotisserie/eris"
+)
+
+// ContractAdapter wraps AuthApplicationService and implements authdef.AuthService,
+// translating between proto-typed requests/responses and domain-idiomatic signatures.
+type ContractAdapter struct {
+	svc *AuthApplicationService
+}
+
+var _ authdef.AuthService = (*ContractAdapter)(nil)
+
+// NewContractAdapter creates a ContractAdapter around svc.
+func NewContractAdapter(svc *AuthApplicationService) *ContractAdapter {
+	return &ContractAdapter{svc: svc}
+}
+
+func (a *ContractAdapter) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {
+	userID, err := a.svc.Register(ctx, req.GetLogin(), req.GetPassword())
+	if err != nil {
+		return nil, err
+	}
+
+	return &authv1.RegisterResponse{UserId: userID.String()}, nil
+}
+
+func (a *ContractAdapter) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {
+	token, userID, err := a.svc.Login(ctx, req.GetLogin(), req.GetPassword())
+	if err != nil {
+		return nil, err
+	}
+
+	return &authv1.LoginResponse{Token: token, UserId: userID.String()}, nil
+}
+
+func (a *ContractAdapter) ValidateToken(
+	ctx context.Context, req *authv1.ValidateTokenRequest) (*authv1.ValidateTokenResponse, error) {
+	userID, err := a.svc.ValidateToken(ctx, req.GetToken())
+	if err != nil {
+		return nil, err
+	}
+
+	return &authv1.ValidateTokenResponse{IsValid: true, UserId: userID.String()}, nil
+}
+
+func (a *ContractAdapter) ChangePassword(
+	ctx context.Context, req *authv1.ChangePasswordRequest) (*authv1.ChangePasswordResponse, error) {
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to parse UUID")
+	}
+	if err := a.svc.ChangePassword(ctx, userID, req.GetOldPassword(), req.GetNewPassword()); err != nil {
+		return nil, err
+	}
+
+	return &authv1.ChangePasswordResponse{}, nil
+}
+
+func (a *ContractAdapter) DeleteUser(
+	ctx context.Context, req *authv1.DeleteUserRequest) (*authv1.DeleteUserResponse, error) {
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to parse UUID")
+	}
+	if err := a.svc.DeleteUser(ctx, userID); err != nil {
+		return nil, err
+	}
+
+	return &authv1.DeleteUserResponse{}, nil
+}

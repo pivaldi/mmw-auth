@@ -23,9 +23,6 @@ type AuthApplicationService struct {
 	jwtSecret   []byte
 }
 
-// Ensure AuthApplicationService satisfies the defauth.AuthService contract.
-var _ authdef.AuthService = (*AuthApplicationService)(nil)
-
 // NewAuthService creates an AuthApplicationService with all required dependencies.
 func NewAuthService(
 	userRepo ports.UserRepository,
@@ -249,7 +246,3 @@ func (s *AuthApplicationService) createJWT(userID uuid.UUID) (string, error) {
 
 	return token, nil
 }
-
-// Ensure Module implements defauth.AuthService so it can be passed directly to
-// defauth.NewInprocClient without an intermediate wrapper.
-var _ authdef.AuthService = (*AuthApplicationService)(nil)
