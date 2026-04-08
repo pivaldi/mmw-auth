@@ -41,9 +41,21 @@ type Module struct {
 	service *application.AuthApplicationService
 }
 
-// Service returns the auth service as an authdef.AuthService, wrapped in a
-// ContractAdapter so callers receive the proto-typed contract interface.
-func (m *Module) Service() authdef.AuthService {
+// PublicService returns the auth module's public-facing operations as AuthPublicService.
+// Callers that only need registration, login, and password management use this accessor.
+func (m *Module) PublicService() authdef.AuthPublicService {
+	return application.NewContractAdapter(m.service)
+}
+
+// PrivateService returns the auth module's internal operations as AuthPrivateService.
+// Use this when the caller only needs to validate tokens (e.g. the todo module).
+func (m *Module) PrivateService() authdef.AuthPrivateService {
+	return application.NewContractAdapter(m.service)
+}
+
+// CombinedService returns the full auth service interface.
+// This is used by InprocClient to satisfy all sub-interfaces simultaneously.
+func (m *Module) CombinedService() authdef.AuthService {
 	return application.NewContractAdapter(m.service)
 }
 
@@ -92,8 +104,10 @@ func New(infra Infrastructure) (*Module, error) {
 	authHandler := connect.NewAuthHandler(authService)
 
 	mux := http.NewServeMux()
-	path, handler := authv1connect.NewAuthServiceHandler(authHandler)
-	mux.Handle(path, handler)
+	pubPath, pubHandler := authv1connect.NewAuthPublicServiceHandler(authHandler)
+	privPath, privHandler := authv1connect.NewAuthPrivateServiceHandler(authHandler)
+	mux.Handle(pubPath, pubHandler)
+	mux.Handle(privPath, privHandler)
 
 	h2cHandler := h2c.NewHandler(mux, &http2.Server{})
 	httpInfra := pfserver.HTTPServerInfra{

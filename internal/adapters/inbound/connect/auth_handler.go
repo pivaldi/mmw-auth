@@ -16,8 +16,11 @@ type AuthHandler struct {
 	svc *application.AuthApplicationService
 }
 
+var _ authv1connect.AuthPublicServiceHandler  = (*AuthHandler)(nil)
+var _ authv1connect.AuthPrivateServiceHandler = (*AuthHandler)(nil)
+
 // NewAuthHandler creates a new AuthHandler.
-func NewAuthHandler(svc *application.AuthApplicationService) authv1connect.AuthServiceHandler {
+func NewAuthHandler(svc *application.AuthApplicationService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
 
