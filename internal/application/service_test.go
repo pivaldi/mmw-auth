@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/application"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
 	"github.com/pivaldi/mmw-auth/internal/domain"
@@ -149,11 +148,9 @@ func TestLogin_wrongPassword(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for wrong password")
 	}
-	domErr, ok := errors.AsType[*platform.DomainError](err)
-	if !ok {
-		t.Fatalf("expected *platform.DomainError, got %T", err)
+	if !errors.Is(err, domain.ErrInvalidCredentials) {
+		t.Errorf("expected ErrInvalidCredentials, got %v", err)
 	}
-	_ = domErr
 }
 
 func TestValidateToken_validToken(t *testing.T) {
@@ -179,9 +176,8 @@ func TestValidateToken_invalidJWT(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid JWT")
 	}
-	_, ok := errors.AsType[*platform.DomainError](err)
-	if !ok {
-		t.Errorf("expected *platform.DomainError, got %T", err)
+	if !errors.Is(err, domain.ErrInvalidToken) {
+		t.Errorf("expected ErrInvalidToken, got %v", err)
 	}
 }
 

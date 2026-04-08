@@ -1,5 +1,5 @@
-// modules/auth/internal/application/errors_test.go
-package application_test
+// modules/auth/internal/adapters/inbound/mapper/errors_test.go
+package mapper_test
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/piprim/mmw/pkg/platform"
-	"github.com/pivaldi/mmw-auth/internal/application"
+	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/mapper"
 	"github.com/pivaldi/mmw-auth/internal/domain"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 )
@@ -28,7 +28,7 @@ func TestDomainErrorFor_KnownSentinels(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := application.DomainErrorFor(tc.input)
+			result := mapper.DomainErrorFor(tc.input)
 
 			domErr, ok := errors.AsType[*platform.DomainError](result)
 			if !ok {
@@ -49,7 +49,7 @@ func TestDomainErrorFor_KnownSentinels(t *testing.T) {
 func TestDomainErrorFor_WrappedSentinel(t *testing.T) {
 	wrapped := fmt.Errorf("context: %w", domain.ErrInvalidCredentials)
 
-	result := application.DomainErrorFor(wrapped)
+	result := mapper.DomainErrorFor(wrapped)
 
 	_, ok := errors.AsType[*platform.DomainError](result)
 	if !ok {
@@ -60,7 +60,7 @@ func TestDomainErrorFor_WrappedSentinel(t *testing.T) {
 func TestDomainErrorFor_NonDomainError_PassesThrough(t *testing.T) {
 	infra := errors.New("db connection refused")
 
-	result := application.DomainErrorFor(infra)
+	result := mapper.DomainErrorFor(infra)
 
 	if result != infra {
 		t.Errorf("expected original error to pass through, got %v", result)

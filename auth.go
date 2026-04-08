@@ -14,6 +14,7 @@ import (
 	pfuow "github.com/piprim/mmw/pkg/platform/pg/uow"
 	pfserver "github.com/piprim/mmw/pkg/platform/server"
 	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/connect"
+	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/inproc"
 	outboxevents "github.com/pivaldi/mmw-auth/internal/adapters/outbound/events"
 	"github.com/pivaldi/mmw-auth/internal/adapters/outbound/persistence/postgres"
 	"github.com/pivaldi/mmw-auth/internal/application"
@@ -44,19 +45,19 @@ type Module struct {
 // PublicService returns the auth module's public-facing operations as AuthPublicService.
 // Callers that only need registration, login, and password management use this accessor.
 func (m *Module) PublicService() authdef.AuthPublicService {
-	return application.NewContractAdapter(m.service)
+	return inproc.NewContractAdapter(m.service)
 }
 
 // PrivateService returns the auth module's internal operations as AuthPrivateService.
 // Use this when the caller only needs to validate tokens (e.g. the todo module).
 func (m *Module) PrivateService() authdef.AuthPrivateService {
-	return application.NewContractAdapter(m.service)
+	return inproc.NewContractAdapter(m.service)
 }
 
 // CombinedService returns the full auth service interface.
 // This is used by InprocClient to satisfy all sub-interfaces simultaneously.
 func (m *Module) CombinedService() authdef.AuthService {
-	return application.NewContractAdapter(m.service)
+	return inproc.NewContractAdapter(m.service)
 }
 
 // Handler returns the module's HTTP handler so tests can wrap it in

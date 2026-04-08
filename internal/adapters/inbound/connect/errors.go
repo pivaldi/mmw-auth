@@ -6,6 +6,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/piprim/mmw/pkg/platform"
+	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/mapper"
 	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
 	commonv1 "github.com/pivaldi/mmw-contracts/gen/go/common/v1"
 )
@@ -31,7 +32,8 @@ var authConnectCodeMap = map[platform.ErrorCode]connect.Code{
 // rather than sharing it via a helper in ogl, since ogl must not depend on
 // project-specific contracts (commonv1).
 func connectErrorFrom(err error) *connect.Error {
-	domainErr, ok := errors.AsType[*platform.DomainError](err)
+	mappedErr := mapper.DomainErrorFor(err)
+	domainErr, ok := errors.AsType[*platform.DomainError](mappedErr)
 	if !ok {
 		return connect.NewError(connect.CodeInternal, err)
 	}

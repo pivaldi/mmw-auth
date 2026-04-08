@@ -1,5 +1,5 @@
-// modules/auth/internal/application/errors.go
-package application
+// modules/auth/internal/adapters/inbound/mapper/errors.go
+package mapper
 
 import (
 	"errors"

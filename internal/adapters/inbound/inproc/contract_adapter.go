@@ -1,9 +1,11 @@
-package application
+package inproc
 
 import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/mapper"
+	"github.com/pivaldi/mmw-auth/internal/application"
 	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	authv1 "github.com/pivaldi/mmw-contracts/gen/go/auth/v1"
 	"github.com/rotisserie/eris"
@@ -12,20 +14,20 @@ import (
 // ContractAdapter wraps AuthApplicationService and implements authdef.AuthService,
 // translating between proto-typed requests/responses and domain-idiomatic signatures.
 type ContractAdapter struct {
-	svc *AuthApplicationService
+	svc *application.AuthApplicationService
 }
 
 var _ authdef.AuthService = (*ContractAdapter)(nil)
 
 // NewContractAdapter creates a ContractAdapter around svc.
-func NewContractAdapter(svc *AuthApplicationService) *ContractAdapter {
+func NewContractAdapter(svc *application.AuthApplicationService) *ContractAdapter {
 	return &ContractAdapter{svc: svc}
 }
 
 func (a *ContractAdapter) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {
 	userID, err := a.svc.Register(ctx, req.GetLogin(), req.GetPassword())
 	if err != nil {
-		return nil, err
+		return nil, mapper.DomainErrorFor(err)
 	}
 
 	return &authv1.RegisterResponse{UserId: userID.String()}, nil
@@ -34,7 +36,7 @@ func (a *ContractAdapter) Register(ctx context.Context, req *authv1.RegisterRequ
 func (a *ContractAdapter) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {
 	token, userID, err := a.svc.Login(ctx, req.GetLogin(), req.GetPassword())
 	if err != nil {
-		return nil, err
+		return nil, mapper.DomainErrorFor(err)
 	}
 
 	return &authv1.LoginResponse{Token: token, UserId: userID.String()}, nil
@@ -44,7 +46,7 @@ func (a *ContractAdapter) ValidateToken(
 	ctx context.Context, req *authv1.ValidateTokenRequest) (*authv1.ValidateTokenResponse, error) {
 	userID, err := a.svc.ValidateToken(ctx, req.GetToken())
 	if err != nil {
-		return nil, err
+		return nil, mapper.DomainErrorFor(err)
 	}
 
 	return &authv1.ValidateTokenResponse{IsValid: true, UserId: userID.String()}, nil
@@ -57,7 +59,7 @@ func (a *ContractAdapter) ChangePassword(
 		return nil, eris.Wrap(err, "failed to parse UUID")
 	}
 	if err := a.svc.ChangePassword(ctx, userID, req.GetOldPassword(), req.GetNewPassword()); err != nil {
-		return nil, err
+		return nil, mapper.DomainErrorFor(err)
 	}
 
 	return &authv1.ChangePasswordResponse{}, nil
@@ -70,7 +72,7 @@ func (a *ContractAdapter) DeleteUser(
 		return nil, eris.Wrap(err, "failed to parse UUID")
 	}
 	if err := a.svc.DeleteUser(ctx, userID); err != nil {
-		return nil, err
+		return nil, mapper.DomainErrorFor(err)
 	}
 
 	return &authv1.DeleteUserResponse{}, nil

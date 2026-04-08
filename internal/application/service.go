@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/application/ports"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
 	"github.com/rotisserie/eris"
 )
 
@@ -44,7 +43,7 @@ func NewAuthService(
 func (s *AuthApplicationService) Register(ctx context.Context, login, password string) (uuid.UUID, error) {
 	l, err := domain.NewLogin(login)
 	if err != nil {
-		return uuid.Nil, DomainErrorFor(err)
+		return uuid.Nil, err
 	}
 
 	id := uuid.New()
@@ -53,7 +52,7 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 	err = s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := domain.Create(id, l, password)
 		if err != nil {
-			return DomainErrorFor(err)
+			return err
 		}
 		if err := s.userRepo.Save(ctx, u); err != nil {
 			return eris.Wrap(err, "saving user")
@@ -66,7 +65,7 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 		return nil
 	})
 	if err != nil {
-		return uuid.Nil, DomainErrorFor(err)
+		return uuid.Nil, err
 	}
 
 	return userID, nil
@@ -76,7 +75,7 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 func (s *AuthApplicationService) Login(ctx context.Context, login, password string) (string, uuid.UUID, error) {
 	l, err := domain.NewLogin(login)
 	if err != nil {
-		return "", uuid.Nil, DomainErrorFor(domain.ErrInvalidCredentials)
+		return "", uuid.Nil, domain.ErrInvalidCredentials
 	}
 
 	var token string
@@ -115,7 +114,7 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 		return nil
 	})
 	if err != nil {
-		return "", uuid.Nil, DomainErrorFor(err)
+		return "", uuid.Nil, err
 	}
 
 	return token, userID, nil
@@ -125,55 +124,40 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 func (s *AuthApplicationService) ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
 	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, DomainErrorFor(domain.ErrInvalidToken)
+			return nil, domain.ErrInvalidToken
 		}
 
 		return s.jwtSecret, nil
 	})
 	if err != nil || !parsed.Valid {
-		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
+		return uuid.Nil, domain.ErrInvalidToken
 	}
 
 	claims, ok := parsed.Claims.(jwt.MapClaims)
 	if !ok {
-		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
+		return uuid.Nil, domain.ErrInvalidToken
 	}
 
 	userIDStr, ok := claims["user_id"].(string)
 	if !ok {
-		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
+		return uuid.Nil, domain.ErrInvalidToken
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
+		return uuid.Nil, domain.ErrInvalidToken
 	}
 
 	sess, err := s.sessionRepo.FindByToken(ctx, tokenString)
 	if err != nil || sess == nil {
-		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
+		return uuid.Nil, domain.ErrInvalidToken
 	}
 
 	if sess.UserID() != userID {
-		return uuid.Nil, DomainErrorFor(domain.ErrInvalidToken)
+		return uuid.Nil, domain.ErrInvalidToken
 	}
 
 	return userID, nil
-}
-
-// GetUser retrieves a user by UUID for cross-service in-process access.
-func (s *AuthApplicationService) GetUser(ctx context.Context, id string) (*authdef.User, error) {
-	userID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, DomainErrorFor(domain.ErrUserNotFound)
-	}
-
-	u, err := s.userRepo.FindByID(ctx, userID)
-	if err != nil {
-		return nil, DomainErrorFor(domain.ErrUserNotFound)
-	}
-
-	return &authdef.User{Id: u.ID().String(), Login: u.Login().String()}, nil
 }
 
 // ChangePassword replaces the user's password after verifying the old one.
@@ -185,10 +169,10 @@ func (s *AuthApplicationService) ChangePassword(
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
-			return DomainErrorFor(domain.ErrUserNotFound)
+			return domain.ErrUserNotFound
 		}
 		if err := u.ChangePassword(oldPassword, newPassword); err != nil {
-			return DomainErrorFor(err)
+			return err
 		}
 		if err := s.userRepo.Update(ctx, u); err != nil {
 			return eris.Wrap(err, "updating user password")
@@ -201,7 +185,7 @@ func (s *AuthApplicationService) ChangePassword(
 		return nil
 	})
 	if err != nil {
-		return DomainErrorFor(err)
+		return err
 	}
 
 	return nil
@@ -212,7 +196,7 @@ func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUI
 	err := s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := s.userRepo.FindByID(ctx, userID)
 		if err != nil {
-			return DomainErrorFor(domain.ErrUserNotFound)
+			return domain.ErrUserNotFound
 		}
 		u.Delete()
 		if err := s.dispatcher.Dispatch(ctx, u.ClearEvents()); err != nil {
@@ -226,7 +210,7 @@ func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUI
 		return nil
 	})
 	if err != nil {
-		return DomainErrorFor(err)
+		return err
 	}
 
 	return nil
