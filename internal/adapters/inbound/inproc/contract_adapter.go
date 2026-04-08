@@ -11,13 +11,15 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-// ContractAdapter wraps AuthApplicationService and implements authdef.AuthService,
-// translating between proto-typed requests/responses and domain-idiomatic signatures.
+// ContractAdapter wraps AuthApplicationService and implements both AuthPublicService
+// and AuthPrivateService, translating between proto-typed requests/responses and
+// domain-idiomatic signatures.
 type ContractAdapter struct {
 	svc *application.AuthApplicationService
 }
 
-var _ authdef.AuthService = (*ContractAdapter)(nil)
+var _ authdef.AuthPublicService = (*ContractAdapter)(nil)
+var _ authdef.AuthPrivateService = (*ContractAdapter)(nil)
 
 // NewContractAdapter creates a ContractAdapter around svc.
 func NewContractAdapter(svc *application.AuthApplicationService) *ContractAdapter {

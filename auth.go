@@ -54,12 +54,6 @@ func (m *Module) PrivateService() authdef.AuthPrivateService {
 	return inproc.NewContractAdapter(m.service)
 }
 
-// CombinedService returns the full auth service interface.
-// This is used by InprocClient to satisfy all sub-interfaces simultaneously.
-func (m *Module) CombinedService() authdef.AuthService {
-	return inproc.NewContractAdapter(m.service)
-}
-
 // Handler returns the module's HTTP handler so tests can wrap it in
 // httptest.NewServer without starting a real server on a port.
 func (m *Module) Handler() http.Handler {
