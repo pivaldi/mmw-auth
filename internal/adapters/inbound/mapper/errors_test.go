@@ -9,7 +9,7 @@ import (
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/mapper"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
+	defauth "github.com/pivaldi/mmw-contracts/go/application/auth"
 )
 
 func TestDomainErrorFor_KnownSentinels(t *testing.T) {

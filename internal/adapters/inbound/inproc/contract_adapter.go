@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/mapper"
 	"github.com/pivaldi/mmw-auth/internal/application"
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
-	authv1 "github.com/pivaldi/mmw-contracts/gen/go/auth/v1"
+	authdef "github.com/pivaldi/mmw-contracts/go/application/auth"
+	authv1 "github.com/pivaldi/mmw-contracts/go/network/auth/v1"
 	"github.com/rotisserie/eris"
 )
 

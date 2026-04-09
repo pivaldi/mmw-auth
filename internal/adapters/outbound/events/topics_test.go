@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
+	authdef "github.com/pivaldi/mmw-contracts/go/application/auth"
 )
 
 func TestDomainTopics_AllEventTypesCovered(t *testing.T) {

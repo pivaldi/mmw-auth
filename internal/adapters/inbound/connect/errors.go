@@ -7,8 +7,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/adapters/inbound/mapper"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
-	commonv1 "github.com/pivaldi/mmw-contracts/gen/go/common/v1"
+	defauth "github.com/pivaldi/mmw-contracts/go/application/auth"
+	commonv1 "github.com/pivaldi/mmw-contracts/go/network/common/v1"
 )
 
 // authConnectCodeMap maps proto error codes (from contracts) to Connect status codes.

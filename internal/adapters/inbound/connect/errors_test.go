@@ -7,7 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/piprim/mmw/pkg/platform"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
+	defauth "github.com/pivaldi/mmw-contracts/go/application/auth"
 )
 
 func TestConnectErrorFrom_DomainError_MapsToCorrectCode(t *testing.T) {

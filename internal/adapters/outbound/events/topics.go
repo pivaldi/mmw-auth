@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
+	authdef "github.com/pivaldi/mmw-contracts/go/application/auth"
 )
 
 // domainTopics maps semantic domain event types to Watermill routing keys.

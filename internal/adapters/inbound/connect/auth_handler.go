@@ -7,8 +7,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/pivaldi/mmw-auth/internal/application"
-	authv1 "github.com/pivaldi/mmw-contracts/gen/go/auth/v1"
-	"github.com/pivaldi/mmw-contracts/gen/go/auth/v1/authv1connect"
+	authv1 "github.com/pivaldi/mmw-contracts/go/network/auth/v1"
+	"github.com/pivaldi/mmw-contracts/go/network/auth/v1/authv1connect"
 )
 
 // AuthHandler is the Connect RPC handler for the auth service.

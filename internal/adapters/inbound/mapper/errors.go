@@ -6,7 +6,7 @@ import (
 
 	"github.com/piprim/mmw/pkg/platform"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	defauth "github.com/pivaldi/mmw-contracts/definitions/auth"
+	defauth "github.com/pivaldi/mmw-contracts/go/application/auth"
 )
 
 // DomainErrorFor translates a domain sentinel error into a *platform.DomainError

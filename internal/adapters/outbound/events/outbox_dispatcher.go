@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	pfpguow "github.com/piprim/mmw/pkg/platform/pg/uow"
 	"github.com/pivaldi/mmw-auth/internal/domain"
-	authdef "github.com/pivaldi/mmw-contracts/definitions/auth"
+	authdef "github.com/pivaldi/mmw-contracts/go/application/auth"
 	"github.com/rotisserie/eris"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
