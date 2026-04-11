@@ -23,8 +23,6 @@ import (
 	authdef "github.com/pivaldi/mmw-contracts/go/application/auth"
 	"github.com/pivaldi/mmw-contracts/go/network/auth/v1/authv1connect"
 	"github.com/rotisserie/eris"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -104,14 +102,16 @@ func New(infra Infrastructure) (*Module, error) {
 	mux.Handle(pubPath, pubHandler)
 	mux.Handle(privPath, privHandler)
 
-	h2cHandler := h2c.NewHandler(mux, &http2.Server{})
 	httpInfra := pfserver.HTTPServerInfra{
-		Config:          cfg.Server,
-		Handler:         h2cHandler,
-		Logger:          infra.Logger,
-		HealthFns:       pfserver.HealthFns{"database": userRepo.Health},
-		LogPayloads:     true,
-		WithDebugRoutes: cfg.Environment.IsDev(),
+		Config:      cfg.Server,
+		Handler:     mux,
+		Logger:      infra.Logger,
+		HealthFns:   pfserver.HealthFns{"database": userRepo.Health},
+		LogPayloads: true,
+		ServiceNames: []string{
+			authv1connect.AuthPublicServiceName,
+			authv1connect.AuthPrivateServiceName,
+		},
 	}
 
 	server := pfserver.NewHTTPServer(httpInfra)
