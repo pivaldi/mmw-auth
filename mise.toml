@@ -31,7 +31,6 @@ APP_NAME = { required = true }
 DB_PASSWORD="postgres" # TODO: make it secret
 JWT_SECRET="fake-secret" # TODO: make it secret
 
-
 [tasks.setup]
 description = "Update Repo Deps"
 run = """
@@ -215,7 +214,43 @@ run = "go run {{vars.COMPILE_OPTIONS}} cmd/migration/*.go status"
 [tasks."arch:graph"]
 description = "Show graph architectural dependcies for this service"
 run = """
-goda graph \
-  "shared(github.com/pivaldi/mmw-auth:all, github.com/pivaldi/mmw-auth/... + github.com/pivaldi/mmw-auth/.. + github.com/pivaldi/mmw-notifications/... + github.com/pivaldi/mmw-contracts/...) - github.com/pivaldi/mmw-auth/cmd/migration  - github.com/pivaldi/mmw-auth/internal/infra/persistence/migrations/..." \
+goda graph -cluster \
+  "shared(github.com/pivaldi/mmw-auth:all, github.com/pivaldi/mmw-auth/... + github.com/pivaldi/mmw-todo/... + github.com/pivaldi/mmw-notifications/... + github.com/pivaldi/mmw-contracts/...) - github.com/pivaldi/mmw-auth/cmd/migration  - github.com/pivaldi/mmw-auth/internal/infra/persistence/migrations/..." \
   | dot -Tsvg -o graph.svg  &&  echo 'Generated graph: {{config_root}}/graph.svg'
+
+sed -i -E \
+    -e 's|https://pkg\\.go\\.dev/github\\.com/([^/@"]+)/([^/@"]+)/([^"]+)|https://github.com/\\1/\\2/tree/master/\\3|g' \\
+    -e 's|https://pkg\\.go\\.dev/github\\.com/([^/@"]+)/([^/@"]+)@[^"]*|https://github.com/\\1/\\2|g' \\
+    graph.svg
  """
+
+# Dependency tasks
+[tasks."deps:tidy"]
+description = "Tidy Go dependencies"
+run = "go mod tidy"
+
+[tasks.deps]
+description = "Analyze dependencies with goda"
+run = """
+  echo "Analyzing workspace dependencies..."
+  goda graph "./..." | dot -Tsvg -o graph.svg
+  xdg-open graph.svg
+"""
+
+[tasks."deps:tree"]
+description = "Show dependency tree"
+run = """
+echo "Dependency tree for workspace:"
+goda tree "./..."
+"""
+
+[tasks."deps:list"]
+description = "List all dependencies"
+run = """
+echo "All dependencies in workspace:"
+goda list ./...
+"""
+
+[tasks."deps:verify"]
+description = "Verify Go dependencies"
+run = "go mod verify"
