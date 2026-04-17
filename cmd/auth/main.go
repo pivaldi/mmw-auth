@@ -92,6 +92,7 @@ func main() {
 	})
 	if err != nil {
 		logError("failed to initialize auth app", err)
+
 		return
 	}
 
@@ -105,6 +106,7 @@ func main() {
 	err = platform.New(logger, modules).Run(ctx)
 	if err != nil {
 		logError("platform error", err)
+
 		return
 	}
 }

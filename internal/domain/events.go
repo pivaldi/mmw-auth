@@ -10,8 +10,9 @@ import (
 // Event type constants — semantic identifiers owned by the domain.
 // Adapters are responsible for mapping these to transport-layer routing keys.
 const (
-	EventTypeUserRegistered  = "auth.user.registered"
-	EventTypeUserDeleted     = "auth.user.deleted"
+	EventTypeUserRegistered = "auth.user.registered"
+	EventTypeUserDeleted    = "auth.user.deleted"
+	//nolint:gosec // Noting to do with potential hardcoded credentials
 	EventTypePasswordChanged = "auth.user.password_changed"
 	EventTypeUserLoggedIn    = "auth.user.logged_in"
 )

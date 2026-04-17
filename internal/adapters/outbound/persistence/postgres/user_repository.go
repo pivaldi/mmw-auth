@@ -31,7 +31,7 @@ func (r *UserRepository) Save(ctx context.Context, u *domain.User) error {
 	)
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if pgErr.Code == "23505" && errors.As(err, &pgErr) {
 			return domain.ErrUserAlreadyExists
 		}
 

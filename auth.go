@@ -135,6 +135,7 @@ func (m *Module) Start(ctx context.Context) error {
 
 	g.Go(func() error {
 		m.relay.Start(gCtx)
+
 		return nil
 	})
 

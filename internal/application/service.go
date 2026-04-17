@@ -43,7 +43,7 @@ func NewAuthService(
 func (s *AuthApplicationService) Register(ctx context.Context, login, password string) (uuid.UUID, error) {
 	l, err := domain.NewLogin(login)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, eris.Wrap(err, "validate login")
 	}
 
 	id := uuid.New()
@@ -52,7 +52,7 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 	err = s.uow.WithTransaction(ctx, func(ctx context.Context) error {
 		u, err := domain.Create(id, l, password)
 		if err != nil {
-			return err
+			return eris.Wrap(err, "create user")
 		}
 		if err := s.userRepo.Save(ctx, u); err != nil {
 			return eris.Wrap(err, "saving user")
@@ -65,7 +65,7 @@ func (s *AuthApplicationService) Register(ctx context.Context, login, password s
 		return nil
 	})
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, eris.Wrap(err, "register")
 	}
 
 	return userID, nil
@@ -114,7 +114,7 @@ func (s *AuthApplicationService) Login(ctx context.Context, login, password stri
 		return nil
 	})
 	if err != nil {
-		return "", uuid.Nil, err
+		return "", uuid.Nil, eris.Wrap(err, "login")
 	}
 
 	return token, userID, nil
@@ -172,7 +172,7 @@ func (s *AuthApplicationService) ChangePassword(
 			return domain.ErrUserNotFound
 		}
 		if err := u.ChangePassword(oldPassword, newPassword); err != nil {
-			return err
+			return eris.Wrap(err, "change password")
 		}
 		if err := s.userRepo.Update(ctx, u); err != nil {
 			return eris.Wrap(err, "updating user password")
@@ -184,11 +184,8 @@ func (s *AuthApplicationService) ChangePassword(
 
 		return nil
 	})
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return eris.Wrap(err, "change password transaction")
 }
 
 // DeleteUser removes a user from the system.
@@ -209,11 +206,8 @@ func (s *AuthApplicationService) DeleteUser(ctx context.Context, userID uuid.UUI
 
 		return nil
 	})
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return eris.Wrap(err, "delete user transaction")
 }
 
 func (s *AuthApplicationService) createJWT(userID uuid.UUID) (string, error) {
