@@ -66,6 +66,9 @@ require (
 	gotest.tools/gotestsum v1.13.0 // indirect
 )
 
-tool gotest.tools/gotestsum
+tool (
+	github.com/piprim/mmw/cmd/mmw
+	gotest.tools/gotestsum
+)
 
 replace github.com/pressly/goose/v3 => github.com/pivaldi/goose/v3 v3.27.1
