@@ -116,8 +116,13 @@ func New(infra Infrastructure) (*Module, error) {
 
 	server := pfserver.NewHTTPServer(httpInfra)
 
+	eventRelay, err := pfoutbox.NewEventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName)
+	if err != nil {
+		return nil, eris.Wrap(err, "failed to create events relay")
+	}
+
 	return &Module{
-		relay:   pfoutbox.NewEnventsRelay(infra.DBPool, infra.EventBus, infra.Logger, relayTableName),
+		relay:   eventRelay,
 		server:  server,
 		logger:  infra.Logger,
 		service: authService,
