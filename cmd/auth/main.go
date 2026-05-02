@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Create authApp first (todo depends on it)
-	authApp, err := auth.New(auth.Infrastructure{
+	authApp, err := auth.New(ctx, auth.Infrastructure{
 		DBPool:   dbPool,
 		EventBus: systemBus,
 		Logger:   authLogger,
