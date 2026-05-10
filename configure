@@ -14,6 +14,8 @@ l.trap_error
 
 # $IN_DOCKER && exit 0
 
+st.quiet
+
 st.h1 "Configuring Git Sub Project"
 st.doing "Retrieving Git Submodule"
 st.do git submodule update --init --recursive
@@ -21,16 +23,7 @@ st.done
 
 st.h1 "Configuring the project"
 
-st.doing 'Configuration of APP_ENV'
-# shellcheck disable=SC2015
-if isConfigAppEnvNeeded; then
-    cp "${APP_ROOT_PATH}/.envrc.example" "${APP_ROOT_PATH}/.envrc"
-    configAppEnv
-else
-    st.nothing
-fi
-
-. "$APP_ROOT_PATH/.envrc" || exit 1
+configureEnv
 
 "$APP_ROOT_PATH/scripts/common/mise-install.sh"
 
@@ -50,9 +43,5 @@ st.do mise run setup
 st.done
 
 st.doing 'Install Tools'
-if st.var.exits SKIP_FULL_SETUP; then
-    st.do mise run tools:update
-else
-    st.do mise run tools
-fi
+st.do mise run tools
 st.done

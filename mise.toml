@@ -41,6 +41,7 @@ run = """
 
   source scripts/common/libs/st.bash
 
+  st.quiet
   st.h1 'Fix GOPRIVATE for this project'
   st.doing go env -w "GOPRIVATE=github.com/pivaldi/mmw-*"
   st.done

@@ -82,8 +82,8 @@ type Infrastructure struct {
 }
 
 // New wires the auth module with all its dependencies.
-func New(infra Infrastructure) (*Module, error) {
-	cfg, err := config.Load(context.Background(), "")
+func New(ctx context.Context, infra Infrastructure) (*Module, error) {
+	cfg, err := config.Load(ctx, "")
 	if err != nil {
 		return nil, eris.Wrap(err, "app failed to load config")
 	}
